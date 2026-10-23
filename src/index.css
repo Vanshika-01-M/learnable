@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-navy-950 text-slate-100 font-sans antialiased selection:bg-violet-600 selection:text-white;
+    overflow-x: hidden;
+  }
+}
+
+/* High contrast mode overrides */
+.high-contrast {
+  --tw-bg-opacity: 1;
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.high-contrast * {
+  border-color: #ffffff !important;
+}
+
+.high-contrast .bg-navy-900,
+.high-contrast .bg-navy-850,
+.high-contrast .bg-navy-800,
+.high-contrast .bg-navy-750 {
+  background-color: #000000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+.high-contrast .text-slate-400,
+.high-contrast .text-slate-300,
+.high-contrast .text-slate-200 {
+  color: #ffffff !important;
+}
+
+.high-contrast .text-violet-400,
+.high-contrast .text-cyan-400 {
+  color: #ffff00 !important;
+  font-weight: 700;
+}
+
+.high-contrast button {
+  border: 2px solid #ffffff !important;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #253352;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3B4B70;
+}
+
+/* Glass card styling */
+.glass-panel {
+  background: rgba(16, 22, 37, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.glass-panel-subtle {
+  background: rgba(16, 22, 37, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Smooth focus rings for accessibility */
+*:focus-visible {
+  outline: 2px solid #22D3EE;
+  outline-offset: 2px;
+}
