@@ -5,7 +5,8 @@
  * landmark tracking from sign language translation.
  * 
  * Includes:
- * 1. An expanded geometric Heuristic Classifier supporting 12+ real-time static signs.
+ * 1. An expanded geometric Heuristic Classifier supporting 14+ real-time gestures,
+ *    including dynamic wave motion for "Goodbye / Bye!".
  * 2. Instructions on how to add custom geometric gesture rules.
  * 3. Simulated Demo Classifier connected to custom user vocabulary.
  * 4. Extensible Deep Learning Sequence Model adapter interface.
@@ -14,7 +15,35 @@
 // Heuristic stability buffer to prevent jitter
 let gestureStabilityCount = 0;
 let lastDetectedCandidate = null;
-const STABILITY_THRESHOLD = 10; // Must hold gesture steady for ~10 frames (~330ms)
+const STABILITY_THRESHOLD = 8; // Must hold gesture steady for ~8 frames (~260ms)
+
+// Rolling buffer for motion detection (e.g. waving goodbye)
+const wristHistory = [];
+const HISTORY_LENGTH = 16;
+
+function updateWristHistory(wristPoint) {
+  wristHistory.push({ x: wristPoint.x, y: wristPoint.y, time: Date.now() });
+  if (wristHistory.length > HISTORY_LENGTH) {
+    wristHistory.shift();
+  }
+}
+
+function isWavingMotion() {
+  if (wristHistory.length < 8) return false;
+  let dirChanges = 0;
+  let lastDir = 0;
+  for (let i = 1; i < wristHistory.length; i++) {
+    const dx = wristHistory[i].x - wristHistory[i - 1].x;
+    if (Math.abs(dx) > 0.007) {
+      const dir = dx > 0 ? 1 : -1;
+      if (lastDir !== 0 && dir !== lastDir) {
+        dirChanges++;
+      }
+      lastDir = dir;
+    }
+  }
+  return dirChanges >= 2;
+}
 
 /**
  * Geometric helper functions for Hand Landmarks (21 points)
@@ -54,8 +83,8 @@ export class GeometryUtils {
 }
 
 /**
- * 1. Expanded Heuristic Static ISL Classifier
- * Detects 12+ anatomical hand shapes in real-time from webcam landmarks.
+ * 1. Expanded Heuristic Static & Dynamic ISL Classifier
+ * Detects 14+ anatomical hand shapes and dynamic wave motions in real-time.
  */
 export class HeuristicISLClassifier {
   static evaluateHand(landmarks) {
@@ -66,6 +95,8 @@ export class HeuristicISLClassifier {
     }
 
     const wrist = landmarks[0];
+    updateWristHistory(wrist);
+
     const thumbTip = landmarks[4];
     const indexTip = landmarks[8];
     const middleTip = landmarks[12];
@@ -88,8 +119,18 @@ export class HeuristicISLClassifier {
 
     let candidate = null;
 
-    // --- RULE 1: "OK" Sign (Thumb & Index touch, Middle + Ring + Pinky up) ---
-    if (thumbIndexDistance < 0.08 && middleExtended && ringExtended && pinkyExtended) {
+    // --- RULE 1: Waving Hand / "Goodbye / Bye!" ---
+    if (indexExtended && middleExtended && ringExtended && pinkyExtended && isWavingMotion()) {
+      candidate = {
+        text: 'Goodbye / See you soon! (Bye)',
+        hindiText: 'अलविदा / फिर मिलेंगे!',
+        islGloss: 'BYE / GOODBYE / SEE-YOU',
+        confidence: 0.95,
+        explanation: 'Lateral waving open palm gesture detected.',
+      };
+    }
+    // --- RULE 2: "OK" Sign (Thumb & Index touch, Middle + Ring + Pinky up) ---
+    else if (thumbIndexDistance < 0.08 && middleExtended && ringExtended && pinkyExtended) {
       candidate = {
         text: 'OK / All Good / Perfect',
         hindiText: 'सब ठीक है / बढ़िया',
@@ -98,7 +139,7 @@ export class HeuristicISLClassifier {
         explanation: 'Thumb and index tip circular contact with 3 fingers extended.',
       };
     }
-    // --- RULE 2: "I Love You" Sign (Thumb + Index + Pinky extended, Middle & Ring curled) ---
+    // --- RULE 3: "I Love You" Sign (Thumb + Index + Pinky extended, Middle & Ring curled) ---
     else if (thumbExtended && indexExtended && pinkyExtended && middleCurled && ringCurled) {
       candidate = {
         text: 'I Love You / Respect',
@@ -108,7 +149,7 @@ export class HeuristicISLClassifier {
         explanation: 'Thumb, index, and pinky extended simultaneously (universal sign).',
       };
     }
-    // --- RULE 3: "Call Me / Phone" (Thumb + Pinky extended, Index + Middle + Ring curled) ---
+    // --- RULE 4: "Call Me / Phone" (Thumb + Pinky extended, Index + Middle + Ring curled) ---
     else if (thumbExtended && pinkyExtended && indexCurled && middleCurled && ringCurled) {
       candidate = {
         text: 'Please call me / Phone',
@@ -118,7 +159,7 @@ export class HeuristicISLClassifier {
         explanation: 'Thumb and pinky extended mimicking telephone handset.',
       };
     }
-    // --- RULE 4: "Rock On / Horns" (Index + Pinky extended, Thumb + Middle + Ring curled) ---
+    // --- RULE 5: "Rock On / Horns" (Index + Pinky extended, Thumb + Middle + Ring curled) ---
     else if (indexExtended && pinkyExtended && middleCurled && ringCurled && !thumbExtended) {
       candidate = {
         text: 'Rock on / Awesome!',
@@ -128,7 +169,7 @@ export class HeuristicISLClassifier {
         explanation: 'Index and pinky upright with middle knuckles locked.',
       };
     }
-    // --- RULE 5: "Number 4" (4 fingers up, thumb folded) ---
+    // --- RULE 6: "Number 4" (4 fingers up, thumb folded) ---
     else if (indexExtended && middleExtended && ringExtended && pinkyExtended && !thumbExtended) {
       candidate = {
         text: 'Number 4 (Four)',
@@ -138,7 +179,7 @@ export class HeuristicISLClassifier {
         explanation: 'Four fingers upright with thumb folded across palm.',
       };
     }
-    // --- RULE 6: "Number 3" (Index + Middle + Ring up, Pinky curled) ---
+    // --- RULE 7: "Number 3" (Index + Middle + Ring up, Pinky curled) ---
     else if (indexExtended && middleExtended && ringExtended && pinkyCurled) {
       candidate = {
         text: 'Number 3 (Three)',
@@ -148,7 +189,7 @@ export class HeuristicISLClassifier {
         explanation: 'Index, middle, and ring fingers extended.',
       };
     }
-    // --- RULE 7: "Number 2 / Victory / Peace" (Index + Middle up, Ring + Pinky curled) ---
+    // --- RULE 8: "Number 2 / Victory / Peace" (Index + Middle up, Ring + Pinky curled) ---
     else if (indexExtended && middleExtended && ringCurled && pinkyCurled) {
       candidate = {
         text: 'Assistance needed / Number 2',
@@ -158,7 +199,7 @@ export class HeuristicISLClassifier {
         explanation: 'Dual-finger V-formation recognized via index and middle joint analysis.',
       };
     }
-    // --- RULE 8: "Number 1 / Pointing" (Index extended, all others curled) ---
+    // --- RULE 9: "Number 1 / Pointing" (Index extended, all others curled) ---
     else if (indexExtended && middleCurled && ringCurled && pinkyCurled && !thumbExtended) {
       candidate = {
         text: 'You / Pointing / Number 1',
@@ -168,7 +209,7 @@ export class HeuristicISLClassifier {
         explanation: 'Single index directional pointer identified.',
       };
     }
-    // --- RULE 9: "Thumbs Up / Thank You" (Thumb up, 4 fingers curled) ---
+    // --- RULE 10: "Thumbs Up / Thank You" (Thumb up, 4 fingers curled) ---
     else if (indexCurled && middleCurled && ringCurled && pinkyCurled && thumbTip.y < landmarks[3].y) {
       candidate = {
         text: 'Thank you / Good',
@@ -178,7 +219,17 @@ export class HeuristicISLClassifier {
         explanation: 'Upward thumb with curled fingers matching ISL affirmative.',
       };
     }
-    // --- RULE 10: "Closed Fist / Yes" (All curled) ---
+    // --- RULE 11: "Thumbs Down / Dislike" (Thumb pointing downward) ---
+    else if (indexCurled && middleCurled && ringCurled && pinkyCurled && thumbTip.y > landmarks[3].y + 0.05) {
+      candidate = {
+        text: 'No / Disagree / Not good',
+        hindiText: 'नहीं / असहमत',
+        islGloss: 'DISAGREE / NOT-GOOD',
+        confidence: 0.89,
+        explanation: 'Downward thumb indicating disagreement.',
+      };
+    }
+    // --- RULE 12: "Closed Fist / Yes" (All curled) ---
     else if (indexCurled && middleCurled && ringCurled && pinkyCurled) {
       candidate = {
         text: 'Yes / Understood',
@@ -188,7 +239,7 @@ export class HeuristicISLClassifier {
         explanation: 'Closed fist handshape identified.',
       };
     }
-    // --- RULE 11: "Open Palm / Hello" (All 5 extended) ---
+    // --- RULE 13: "Open Palm / Hello" (All 5 extended, static) ---
     else if (indexExtended && middleExtended && ringExtended && pinkyExtended && thumbExtended) {
       candidate = {
         text: 'Hello, welcome to Learnable!',

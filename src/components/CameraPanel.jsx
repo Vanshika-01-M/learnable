@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Video, 
   VideoOff, 
@@ -11,7 +11,10 @@ import {
   Eye, 
   Info,
   SlidersHorizontal,
-  Activity
+  Activity,
+  Sparkles,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export default function CameraPanel({
@@ -28,6 +31,21 @@ export default function CameraPanel({
   canvasRef,
   fps = 30,
 }) {
+  const [showGuide, setShowGuide] = useState(true);
+
+  const supportedLiveGestures = [
+    { icon: '👋', name: 'Wave Bye', desc: 'Wave open hand side to side' },
+    { icon: '✋', name: 'Hello', desc: 'Hold open palm forward' },
+    { icon: '👍', name: 'Good / Thanks', desc: 'Thumb up, fingers curled' },
+    { icon: '👌', name: 'OK', desc: 'Thumb & index circle, 3 up' },
+    { icon: '🤟', name: 'I Love You', desc: 'Thumb, index & pinky up' },
+    { icon: '🤙', name: 'Call Me', desc: 'Thumb & pinky extended' },
+    { icon: '✌️', name: 'Help / Two', desc: 'Index & middle in V-shape' },
+    { icon: '☝️', name: 'You / One', desc: 'Single index extended' },
+    { icon: '✊', name: 'Yes', desc: 'Closed fist nod' },
+    { icon: '👎', name: 'No / Disagree', desc: 'Thumb pointing down' },
+  ];
+
   return (
     <div className="flex flex-col h-full bg-navy-900/90 rounded-2xl border border-violet-500/20 shadow-xl overflow-hidden backdrop-blur-md">
       
@@ -132,7 +150,7 @@ export default function CameraPanel({
           <div className="absolute top-3 right-3 z-20">
             <button
               onClick={() => setShowLandmarks(!showLandmarks)}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all shadow-md backdrop-blur-md ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all shadow-md backdrop-blur-md cursor-pointer ${
                 showLandmarks
                   ? 'bg-cyan-950/90 text-cyan-300 border-cyan-500/50'
                   : 'bg-navy-900/80 text-slate-400 border-slate-700 hover:text-white'
@@ -197,7 +215,7 @@ export default function CameraPanel({
             <div className="flex items-center justify-center gap-3">
               <button
                 onClick={onStartCamera}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 flex items-center gap-1.5 cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Try Again
@@ -220,6 +238,38 @@ export default function CameraPanel({
           )}
         </div>
 
+      </div>
+
+      {/* Live Signs Supported Cheat Sheet Strip */}
+      <div className="border-t border-slate-800/80 bg-navy-950/90 px-4 py-2">
+        <div className="flex items-center justify-between mb-1.5">
+          <button
+            onClick={() => setShowGuide(!showGuide)}
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 hover:text-white cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+            <span>Live Signs You Can Make (10+ Gestures)</span>
+            {showGuide ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
+          </button>
+          <span className="text-[10px] text-cyan-300 font-mono">
+            Wave hand for Bye 👋
+          </span>
+        </div>
+
+        {showGuide && (
+          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+            {supportedLiveGestures.map((g, idx) => (
+              <div
+                key={idx}
+                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-navy-900 border border-slate-800 text-left text-xs text-slate-200"
+                title={g.desc}
+              >
+                <span className="text-sm">{g.icon}</span>
+                <span className="font-medium whitespace-nowrap text-[11px]">{g.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Studio Footer Controls */}
@@ -247,7 +297,7 @@ export default function CameraPanel({
           <button
             onClick={() => setShowLandmarks(!showLandmarks)}
             disabled={cameraStatus !== 'live'}
-            className={`px-3 py-2 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-colors ${
+            className={`px-3 py-2 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer ${
               showLandmarks && cameraStatus === 'live'
                 ? 'bg-slate-800 text-cyan-300 border-cyan-500/40'
                 : 'text-slate-400 border-slate-800 hover:text-slate-200 disabled:opacity-40'
