@@ -34,7 +34,20 @@ Camera Input (Webcam)
 - **100% On-Device Privacy**: Video frames are processed locally in memory using WebAssembly/WebGL. Zero video footage or biometric templates are stored or transmitted to cloud servers.
 - **21 3D Hand Landmark Tracking**: Powered by Google MediaPipe Tasks Vision with glowing skeleton overlay, joint prominence, and multi-hand detection.
 - **Sign Library & Custom Sign Creator**: Built-in interactive Sign Dictionary with 40+ Indian Sign Language signs across 8 domains (Alphabet, Numbers, Greetings, Healthcare, Banking, Daily Living, Education, Emergency), plus a 1-click form to create and save custom signs into localStorage.
-- **Expanded Live Webcam Recognizer (12+ Real-Time Gestures)**: Detects static ISL shapes in real time (Hello, Thank You, Assistance/V-Sign, You/Number 1, Yes/Fist, OK Sign, I Love You, Call Me, Number 3, Number 4, Rock On, Stop).
+- **Expanded Live Webcam Recognizer (14+ Real-Time Gestures)**: Detects static ISL shapes and dynamic wave motions in real time:
+  - 👋 **Goodbye / Bye!**: Dynamic lateral waving hand motion with open palm
+  - ✋ **Hello / Welcome**: Open palm held facing camera
+  - 👍 **Good / Thank you**: Upward thumb with curled fingers
+  - 👎 **No / Disagree**: Downward thumb gesture
+  - 👌 **OK / All Good**: Thumb and index circle with 3 upright fingers
+  - 🤟 **I Love You / Respect**: Thumb, index, and pinky extended
+  - 🤙 **Call Me / Phone**: Thumb and pinky extended
+  - ✌️ **Two / Help / Assistance**: Index and middle in V-formation
+  - ☝️ **One / You**: Directional index pointer
+  - ✊ **Yes / Understood**: Closed fist affirmative
+  - 🤘 **Rock On / Awesome**: Index and pinky extended
+  - 3️⃣ **Number 3** & 4️⃣ **Number 4** numerical signs
+- **Interactive Live Gesture Cheat Sheet**: Collapsible on-screen visual guide showing all supported camera postures so users know exactly what to sign.
 - **Large Accessible Captions**: High-visibility typography with adjustable font scaling (`Normal`, `Large`, `Extra Large`), Hindi translation, and ISL grammatical glosses.
 - **Text-to-Speech (TTS)**: Built-in voice playback via the browser Web Speech API for audible two-way communication.
 - **Presenter Demo Suite**: Pre-configured domain scenarios with guided auto-play for demonstration even when a camera is unavailable.
