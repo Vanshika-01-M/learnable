@@ -34,6 +34,10 @@ import { getAllPhrases } from './utils/demoData';
 const ENGINE_STORAGE_KEY = 'learnable_recognition_engine';
 const SERVER_URL_STORAGE_KEY = 'learnable_model_server_url';
 const ONLY_CUSTOM_STORAGE_KEY = 'learnable_only_custom_signs';
+const AUTO_TRANSLATE_STORAGE_KEY = 'learnable_auto_translate';
+
+// Pause after the last recognized sign before the signed words are translated
+const AUTO_TRANSLATE_DELAY_MS = 2000;
 
 function readStoredSetting(key, fallback) {
   try {
@@ -96,6 +100,7 @@ export default function App() {
   // Sentence Builder: recognized words waiting to become a sentence (via Groq on the model server)
   const [sentenceWords, setSentenceWords] = useState([]);
   const [sentenceStatus, setSentenceStatus] = useState(null); // { state: 'working' | 'error', message }
+  const [autoTranslate, setAutoTranslate] = useState(() => readStoredSetting(AUTO_TRANSLATE_STORAGE_KEY, 'true') === 'true');
 
   // Captions & Translation State
   const [currentCaption, setCurrentCaption] = useState('Hello, welcome to Learnable!');
@@ -208,17 +213,17 @@ export default function App() {
         setModelStatus({ state: 'error', message: 'Could not load the body pose tracker' });
       });
     }
-  }, [recognitionEngine, cameraStatus]);
+  }, [pageName, recognitionEngine, cameraStatus]);
 
   useEffect(() => {
     if (pageName !== 'home') return;
     islModelRef.current.setServerUrl(modelServerUrl);
-  }, [modelServerUrl]);
+  }, [pageName, modelServerUrl]);
 
   useEffect(() => {
     if (pageName !== 'home') return;
     islModelRef.current.setOnlyCustom(onlyCustomSigns);
-  }, [onlyCustomSigns]);
+  }, [pageName, onlyCustomSigns]);
 
   // Load the user's recorded signs from the model server
   const refreshCustomWords = useCallback(() => (
@@ -236,17 +241,18 @@ export default function App() {
 
   useEffect(() => {
     if (pageName === 'home' && recognitionEngine === 'model') refreshCustomWords();
-  }, [recognitionEngine, refreshCustomWords]);
+  }, [pageName, recognitionEngine, refreshCustomWords]);
 
   useEffect(() => {
     try {
       localStorage.setItem(ENGINE_STORAGE_KEY, recognitionEngine);
       localStorage.setItem(SERVER_URL_STORAGE_KEY, modelServerUrl);
       localStorage.setItem(ONLY_CUSTOM_STORAGE_KEY, String(onlyCustomSigns));
+      localStorage.setItem(AUTO_TRANSLATE_STORAGE_KEY, String(autoTranslate));
     } catch {
       // Storage unavailable (e.g. private mode); settings just won't persist
     }
-  }, [recognitionEngine, modelServerUrl, onlyCustomSigns]);
+  }, [recognitionEngine, modelServerUrl, onlyCustomSigns, autoTranslate]);
 
   // Handle resolution dimensions
   const getResolutionDimensions = () => {
@@ -437,11 +443,10 @@ export default function App() {
   };
 
   /**
-   * Sentence Builder: turn the collected words into an English sentence + Hindi (Groq)
+   * Sentence Builder: translate the signed words into an English sentence + Hindi (Groq)
    */
-  const handleMakeSentence = async () => {
-    const words = sentenceWords;
-    setSentenceStatus({ state: 'working', message: 'Making sentence...' });
+  const translateWords = useCallback(async (words) => {
+    setSentenceStatus({ state: 'working', message: 'Translating...' });
     try {
       const result = await ISLModelClassifier.makeSentence(modelServerUrl, words);
       const ts = TranscriptManager.formatTimestamp();
@@ -469,13 +474,22 @@ export default function App() {
       ]);
       SpeechSynthesizer.speak(result.english, { rate: speechRate || 1.0, pitch: 1.0 });
 
-      setSentenceWords([]);
+      // Words signed while Groq was answering stay for the next sentence
+      setSentenceWords(prev => prev.slice(words.length));
       setSentenceStatus(null);
     } catch (err) {
       console.warn('Sentence building failed:', err);
       setSentenceStatus({ state: 'error', message: err.message });
     }
-  };
+  }, [modelServerUrl, speechRate]);
+
+  // Auto-translate: once the signer pauses (no sign being recorded or recognized), translate what was signed
+  useEffect(() => {
+    const signing = modelStatus?.state === 'recording' || modelStatus?.state === 'predicting';
+    if (!autoTranslate || sentenceWords.length === 0 || sentenceStatus || signing) return undefined;
+    const timer = setTimeout(() => translateWords(sentenceWords), AUTO_TRANSLATE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [autoTranslate, sentenceWords, sentenceStatus, modelStatus, translateWords]);
 
   /**
    * Trigger sample demo phrase (from demo suite or sign library)
@@ -681,12 +695,15 @@ export default function App() {
 
           </div>
 
-          {/* Sentence Builder: recognized words → sentence + Hindi */}
+          {/* Sentence Builder: recognized words → sentence + Hindi (automatic when the signer pauses) */}
           <div className="mt-6">
             <SentenceBuilder
               words={sentenceWords}
               status={sentenceStatus}
-              onMakeSentence={handleMakeSentence}
+              autoTranslate={autoTranslate}
+              setAutoTranslate={setAutoTranslate}
+              autoDelaySeconds={AUTO_TRANSLATE_DELAY_MS / 1000}
+              onMakeSentence={() => translateWords(sentenceWords)}
               onUndo={() => setSentenceWords(prev => prev.slice(0, -1))}
               onClear={() => {
                 setSentenceWords([]);

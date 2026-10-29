@@ -48,7 +48,7 @@ Camera Input (Webcam)
   - 🤘 **Rock On / Awesome**: Index and pinky extended
   - 3️⃣ **Number 3** & 4️⃣ **Number 4** numerical signs
 - **Pretrained ISL Word Recognition + My Signs**: Switch Settings → *Sign Recognition Engine* to **ISL Model + My Signs** to recognize 263 Indian Sign Language words with the AI4Bharat OpenHands SL-GCN model, and add your own words by recording each one 5 times (see [Section 6](#6-isl-model--my-signs-local)).
-- **Sentence Builder (Groq, optional)**: Recognized words collect as chips; one click turns them into a natural English sentence with a Hindi translation and speaks it, using the free Groq API (only words are sent, never video). See [SETUP.md](SETUP.md#8-optional-make-sentences-with-groq-free).
+- **Automatic Sentence Translation (Groq, optional)**: Recognized words collect as chips; when you pause signing for 2 seconds they are translated into a natural English sentence with a Hindi translation and spoken aloud, using the free Groq API (only words are sent, never video). See [SETUP.md](SETUP.md#8-optional-make-sentences-with-groq-free).
 - **Interactive Live Gesture Cheat Sheet**: Collapsible on-screen visual guide showing all supported camera postures so users know exactly what to sign.
 - **Large Accessible Captions**: High-visibility typography with adjustable font scaling (`Normal`, `Large`, `Extra Large`), Hindi translation, and ISL grammatical glosses.
 - **Text-to-Speech (TTS)**: Built-in voice playback via the browser Web Speech API for audible two-way communication.
@@ -98,7 +98,7 @@ learnable/
 │   │   ├── HistoryDrawer.jsx   # Slide-out session transcript log
 │   │   ├── SettingsModal.jsx   # Camera device, resolution, and theme settings
 │   │   ├── MySignsPanel.jsx    # Record, list and delete your own signs
-│   │   ├── SentenceBuilder.jsx # Recognized words → sentence + Hindi (Groq)
+│   │   ├── SentenceBuilder.jsx # Signed words → auto-translated sentence + Hindi (Groq)
 │   │   └── Footer.jsx          # Accessible footer with hackathon credits
 │   └── utils/
 │       ├── webcamManager.js    # Camera acquisition, permissions, and lifecycle

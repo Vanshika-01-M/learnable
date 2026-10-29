@@ -171,9 +171,9 @@ Tips:
 
 ---
 
-## 8. Optional: make sentences with Groq (free)
+## 8. Optional: translate into sentences with Groq (free)
 
-Recognition gives one word per sign. The **Sentence Builder** (below the captions) collects those words and, with one click, turns them into a natural English sentence plus a Hindi translation, and speaks it. For example *I · Doctor · Tomorrow* → "I will see the doctor tomorrow." / "मैं कल डॉक्टर से मिलूँगा।"
+Recognition gives one word per sign. The **Sentence Builder** (below the captions) collects those words, and **when you stop signing for 2 seconds** it automatically translates them into a natural English sentence plus a Hindi translation, and speaks it. For example *I · Doctor · Tomorrow* → "I will see a doctor tomorrow." / "मैं कल डॉक्टर के पास जाऊँगा।" Untick **Auto-translate when I pause** to translate only when you click **Translate now**.
 
 It uses the free [Groq](https://console.groq.com) API. Only the recognized words (text) are sent to Groq, never video or landmarks. Sign recognition itself keeps working without it.
 
@@ -205,7 +205,7 @@ It uses the free [Groq](https://console.groq.com) API. Only the recognized words
    Sentence building: on (Groq model openai/gpt-oss-120b)
    ```
 
-5. In the app, sign a few words; they appear as chips in the **Sentence Builder**. Use **Undo** to remove a wrong word, then click **Make sentence**.
+5. In the app, sign a few words, lowering your hands between them; they appear as chips in the **Sentence Builder**. Keep the pause between words short (under 2 seconds). When you stop, the sentence appears in the captions by itself. Use **Undo** right away to remove a wrongly recognized word.
 
 The free plan allows about 1,000 sentences a day; each takes about 1 second. To try another model, set `GROQ_MODEL` in `server/.env` (for example `openai/gpt-oss-20b`) and restart the server. Free accounts don't get every model listed on Groq's website; if you see "check GROQ_MODEL", the account can't use that model.
 

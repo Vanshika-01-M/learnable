@@ -4,6 +4,9 @@ import { MessageSquareText, Sparkles, Undo2, X, RefreshCw, AlertCircle } from 'l
 export default function SentenceBuilder({
   words = [],
   status, // { state: 'working' | 'error', message }
+  autoTranslate,
+  setAutoTranslate,
+  autoDelaySeconds = 2,
   onMakeSentence,
   onUndo,
   onClear,
@@ -20,12 +23,21 @@ export default function SentenceBuilder({
           <div>
             <h2 className="text-sm font-semibold text-white tracking-wide">Sentence Builder</h2>
             <p className="text-[11px] text-slate-400">
-              Sign several words, then turn them into an English sentence and Hindi translation (Groq AI)
+              Sign several words; Groq AI translates them into an English sentence and Hindi
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none mr-1">
+            <input
+              type="checkbox"
+              checked={autoTranslate}
+              onChange={(e) => setAutoTranslate(e.target.checked)}
+              className="w-4 h-4 accent-cyan-400 cursor-pointer"
+            />
+            <span>Auto-translate when I pause</span>
+          </label>
           <button
             type="button"
             onClick={onUndo}
@@ -52,7 +64,7 @@ export default function SentenceBuilder({
             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white shadow-md flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
           >
             {working ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-            <span>{working ? 'Making sentence...' : 'Make sentence'}</span>
+            <span>{working ? 'Translating...' : 'Translate now'}</span>
           </button>
         </div>
       </div>
@@ -61,6 +73,7 @@ export default function SentenceBuilder({
         {words.length === 0 ? (
           <p className="text-xs text-slate-500">
             Recognized words collect here, in the order you sign them.
+            {autoTranslate && ` When you stop signing for ${autoDelaySeconds} seconds, they are translated automatically.`}
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
@@ -73,6 +86,12 @@ export default function SentenceBuilder({
               </span>
             ))}
           </div>
+        )}
+
+        {words.length > 0 && autoTranslate && !status && (
+          <p className="text-[11px] text-slate-400">
+            Keep signing to add words. Translating {autoDelaySeconds} seconds after your last sign...
+          </p>
         )}
 
         {status?.state === 'error' && (
