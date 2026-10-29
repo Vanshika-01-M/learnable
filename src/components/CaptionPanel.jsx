@@ -63,6 +63,7 @@ export default function CaptionPanel({
   const isDemo = source === 'demo';
   const isHeuristic = source === 'live-heuristic';
   const isModel = source === 'deep-model';
+  const isSentence = source === 'sentence';
   const confidencePercent = confidence ? Math.round(confidence * 100) : null;
 
   return (
@@ -95,6 +96,12 @@ export default function CaptionPanel({
                   Pretrained ISL Model
                 </span>
               )}
+              {isSentence && (
+                <span className="text-[10px] font-semibold text-cyan-200 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-500/30 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-cyan-300" />
+                  Groq Sentence
+                </span>
+              )}
             </h2>
             <p className="text-[11px] text-slate-400">Translated text display with speech synthesis</p>
           </div>
@@ -124,7 +131,7 @@ export default function CaptionPanel({
           </div>
         ) : (
           <span className="text-[11px] text-slate-500 font-mono">
-            Awaiting Sign...
+            {isSentence ? 'AI-written sentence' : 'Awaiting Sign...'}
           </span>
         )}
       </div>

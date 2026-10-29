@@ -30,11 +30,11 @@ export default function CameraPanel({
   videoRef,
   canvasRef,
   fps = 30,
-  recognitionEngine = 'heuristic', // 'heuristic' | 'kaggle'
+  recognitionEngine = 'heuristic', // 'heuristic' | 'model'
   modelStatus, // { state: 'idle' | 'recording' | 'predicting' | 'error', message }
 }) {
   const [showGuide, setShowGuide] = useState(true);
-  const isKaggleModel = recognitionEngine === 'kaggle';
+  const isModel = recognitionEngine === 'model';
 
   const modelStatusStyles = {
     recording: 'border-rose-400/50 text-rose-200',
@@ -155,7 +155,7 @@ export default function CameraPanel({
               </div>
             )}
 
-            {isKaggleModel && modelStatus && (
+            {isModel && modelStatus && (
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy-900/90 border backdrop-blur-md max-w-[260px] ${modelStatusStyles}`}>
                 {modelStatus.state === 'recording' && <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse shrink-0" />}
                 {modelStatus.state === 'predicting' && <RefreshCw className="w-3 h-3 animate-spin shrink-0" />}
@@ -251,15 +251,15 @@ export default function CameraPanel({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-navy-950/90 border border-slate-800 text-[11px] text-slate-300 backdrop-blur-sm">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>
-              {isKaggleModel
-                ? 'Zero Cloud Video — only landmarks go to your Kaggle model'
+              {isModel
+                ? 'Zero Cloud Video — only landmarks go to your model server'
                 : '100% Local Processing — Zero Cloud Video'}
             </span>
           </div>
 
           {cameraStatus === 'live' && (
             <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded bg-navy-950/80 text-[10px] text-slate-400 border border-slate-800">
-              <span>{isKaggleModel ? 'Pretrained ISL Model' : 'WebAssembly Vision'}</span>
+              <span>{isModel ? 'ISL Model + My Signs' : 'WebAssembly Vision'}</span>
             </div>
           )}
         </div>
@@ -274,18 +274,18 @@ export default function CameraPanel({
             className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 hover:text-white cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-            <span>{isKaggleModel ? 'Pretrained ISL Model (263 INCLUDE Words)' : 'Live Signs You Can Make (10+ Gestures)'}</span>
+            <span>{isModel ? 'ISL Model (263 Words + My Signs)' : 'Live Signs You Can Make (10+ Gestures)'}</span>
             {showGuide ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
           </button>
           <span className="text-[10px] text-cyan-300 font-mono">
-            {isKaggleModel ? 'Upper body in view, one word per sign' : 'Wave hand for Bye 👋'}
+            {isModel ? 'Upper body in view, one word per sign' : 'Wave hand for Bye 👋'}
           </span>
         </div>
 
-        {showGuide && isKaggleModel && (
+        {showGuide && isModel && (
           <div className="py-1 space-y-1.5">
             <p className="text-[11px] text-slate-400">
-              Start with hands down, sign one word, then lower your hands. The sign is sent when your hands leave the frame.
+              Start with hands down, sign one word, then lower your hands. Add your own words in the My Signs panel below.
             </p>
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin">
               {sampleModelWords.map((word) => (
@@ -300,7 +300,7 @@ export default function CameraPanel({
           </div>
         )}
 
-        {showGuide && !isKaggleModel && (
+        {showGuide && !isModel && (
           <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
             {supportedLiveGestures.map((g, idx) => (
               <div

@@ -2,7 +2,7 @@
  * Pose Landmark Detector utility for Learnable.
  * Wraps Google MediaPipe Tasks Vision (PoseLandmarker) to extract the 33 BlazePose
  * body keypoints the pretrained ISL model needs alongside the hand landmarks.
- * Loaded lazily, only when the Kaggle ISL model engine is selected.
+ * Loaded lazily, only when the ISL model engine is selected.
  */
 
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';

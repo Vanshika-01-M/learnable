@@ -20,16 +20,24 @@ import { PoseLandmarkDetector } from './utils/poseLandmarkDetector';
 import {
   HeuristicISLClassifier,
   SimulatedDemoClassifier,
-  KaggleISLModelClassifier,
+  ISLModelClassifier,
+  DEFAULT_MODEL_SERVER_URL,
   buildHolisticFrame,
 } from './utils/signClassifierAdapter';
+import MySignsPanel from './components/MySignsPanel';
+import SentenceBuilder from './components/SentenceBuilder';
 import { TranscriptManager } from './utils/transcriptManager';
 import { SpeechSynthesizer } from './utils/speechSynthesizer';
 import { getAllPhrases } from './utils/demoData';
 
-// Recognition engine preferences persist across reloads (the Kaggle URL is tedious to re-paste)
+// Recognition engine preferences persist across reloads
 const ENGINE_STORAGE_KEY = 'learnable_recognition_engine';
 const SERVER_URL_STORAGE_KEY = 'learnable_model_server_url';
+const ONLY_CUSTOM_STORAGE_KEY = 'learnable_only_custom_signs';
+const AUTO_TRANSLATE_STORAGE_KEY = 'learnable_auto_translate';
+
+// Pause after the last recognized sign before the signed words are translated
+const AUTO_TRANSLATE_DELAY_MS = 2000;
 
 function readStoredSetting(key, fallback) {
   try {
@@ -75,10 +83,24 @@ export default function App() {
   const [overlayColor, setOverlayColor] = useState('cyan');
   const [speechRate, setSpeechRate] = useState(1.0);
 
-  // Recognition engine: on-device heuristic gestures or the pretrained ISL model on Kaggle
-  const [recognitionEngine, setRecognitionEngine] = useState(() => readStoredSetting(ENGINE_STORAGE_KEY, 'heuristic'));
-  const [modelServerUrl, setModelServerUrl] = useState(() => readStoredSetting(SERVER_URL_STORAGE_KEY, ''));
+  // Recognition engine: on-device heuristic gestures or the ISL model server ('model')
+  const [recognitionEngine, setRecognitionEngine] = useState(() => {
+    const stored = readStoredSetting(ENGINE_STORAGE_KEY, 'heuristic');
+    return stored === 'kaggle' ? 'model' : stored; // earlier name of the model engine
+  });
+  const [modelServerUrl, setModelServerUrl] = useState(() => readStoredSetting(SERVER_URL_STORAGE_KEY, DEFAULT_MODEL_SERVER_URL));
   const [modelStatus, setModelStatus] = useState(null);
+
+  // My Signs: words the user recorded, and whether to recognize only those
+  const [customWords, setCustomWords] = useState([]);
+  const [customWordsError, setCustomWordsError] = useState(null);
+  const [onlyCustomSigns, setOnlyCustomSigns] = useState(() => readStoredSetting(ONLY_CUSTOM_STORAGE_KEY, 'false') === 'true');
+  const [recordingSign, setRecordingSign] = useState(null); // { label, saved, count } while recording samples
+
+  // Sentence Builder: recognized words waiting to become a sentence (via Groq on the model server)
+  const [sentenceWords, setSentenceWords] = useState([]);
+  const [sentenceStatus, setSentenceStatus] = useState(null); // { state: 'working' | 'error', message }
+  const [autoTranslate, setAutoTranslate] = useState(() => readStoredSetting(AUTO_TRANSLATE_STORAGE_KEY, 'true') === 'true');
 
   // Captions & Translation State
   const [currentCaption, setCurrentCaption] = useState('Hello, welcome to Learnable!');
@@ -144,6 +166,10 @@ export default function App() {
         domain: domain || 'general',
       }
     ]);
+
+    // Collect the word for the Sentence Builder (most recent 15)
+    setSentenceWords(prev => [...prev, match.text].slice(-15));
+    setSentenceStatus(null);
   };
 
   // Instantiate Singletons
@@ -152,7 +178,7 @@ export default function App() {
     webcamManagerRef.current = new WebcamManager();
     detectorRef.current = new HandLandmarkDetector();
     poseDetectorRef.current = new PoseLandmarkDetector();
-    islModelRef.current = new KaggleISLModelClassifier({
+    islModelRef.current = new ISLModelClassifier({
       onPrediction: (match) => showLiveMatch(match, match.domain),
       onStatusChange: setModelStatus,
     });
@@ -173,33 +199,60 @@ export default function App() {
     };
   }, [pageName]);
 
-  // Keep the Kaggle model client in sync with the selected engine and server URL
+  // Keep the ISL model client in sync with the selected engine and server URL
+  // (info pages have no camera workspace, so there is no client to sync)
   useEffect(() => {
+    if (pageName !== 'home') return;
     recognitionEngineRef.current = recognitionEngine;
     islModelRef.current?.reset();
 
-    // The body pose tracker is only needed (and downloaded) for the pretrained model
-    if (recognitionEngine === 'kaggle' && cameraStatus === 'live') {
+    // The body pose tracker is only needed (and downloaded) for the ISL model
+    if (recognitionEngine === 'model' && cameraStatus === 'live') {
       poseDetectorRef.current?.initialize()?.catch((err) => {
         console.error('PoseLandmarker failed to load:', err);
         setModelStatus({ state: 'error', message: 'Could not load the body pose tracker' });
       });
     }
-  }, [recognitionEngine, cameraStatus]);
+  }, [pageName, recognitionEngine, cameraStatus]);
 
   useEffect(() => {
+    if (pageName !== 'home') return;
     islModelRef.current?.setServerUrl(modelServerUrl);
-  }, [modelServerUrl]);
+  }, [pageName, modelServerUrl]);
+
+  useEffect(() => {
+    if (pageName !== 'home') return;
+    islModelRef.current?.setOnlyCustom(onlyCustomSigns);
+  }, [pageName, onlyCustomSigns]);
+
+  // Load the user's recorded signs from the model server
+  const refreshCustomWords = useCallback(() => (
+    ISLModelClassifier.listCustomSigns(modelServerUrl).then(
+      (words) => {
+        setCustomWords(words);
+        setCustomWordsError(null);
+      },
+      (err) => {
+        console.warn('Could not load recorded signs:', err);
+        setCustomWordsError('Cannot reach the model server. Is it running?');
+      }
+    )
+  ), [modelServerUrl]);
+
+  useEffect(() => {
+    if (pageName === 'home' && recognitionEngine === 'model') refreshCustomWords();
+  }, [pageName, recognitionEngine, refreshCustomWords]);
 
   useEffect(() => {
     try {
       localStorage.setItem(ENGINE_STORAGE_KEY, recognitionEngine);
       localStorage.setItem(SERVER_URL_STORAGE_KEY, modelServerUrl);
+      localStorage.setItem(ONLY_CUSTOM_STORAGE_KEY, String(onlyCustomSigns));
+      localStorage.setItem(AUTO_TRANSLATE_STORAGE_KEY, String(autoTranslate));
     } catch {
       // Storage unavailable (e.g. private mode); settings just won't persist
     }
-  }, [recognitionEngine, modelServerUrl]);
-
+  }, [recognitionEngine, modelServerUrl, onlyCustomSigns, autoTranslate]);
 
   // Handle resolution dimensions
   const getResolutionDimensions = () => {
@@ -255,9 +308,9 @@ export default function App() {
     // Extract landmarks from current video frame
     const result = detector.detectForVideo(video);
 
-    // Pretrained ISL model: stream body + hand landmarks of each new frame (never video)
-    const useKaggleModel = recognitionEngineRef.current === 'kaggle';
-    if (result && useKaggleModel && poseDetectorRef.current.isReady) {
+    // ISL model: stream body + hand landmarks of each new frame (never video)
+    const useIslModel = recognitionEngineRef.current === 'model';
+    if (result && useIslModel && poseDetectorRef.current.isReady) {
       const pose = poseDetectorRef.current.detectForVideo(video);
       islModelRef.current.pushFrame(
         buildHolisticFrame(pose, result.landmarks, result.handednesses),
@@ -284,7 +337,7 @@ export default function App() {
 
       // Check heuristic sign match on primary hand (the pretrained model reports asynchronously)
       const primaryLandmarks = result.landmarks[0];
-      const match = useKaggleModel ? null : HeuristicISLClassifier.evaluateHand(primaryLandmarks);
+      const match = useIslModel ? null : HeuristicISLClassifier.evaluateHand(primaryLandmarks);
 
       if (match && match.hasMatch) {
         const timeNow = Date.now();
@@ -363,6 +416,80 @@ export default function App() {
     setCameraStatus('idle');
   };
 
+  /**
+   * My Signs: record samples of a word with the camera, or delete a recorded word
+   */
+  const handleRecordSign = (label, hindi, count) => {
+    setRecordingSign({ label, saved: 0, count });
+    islModelRef.current.recordSamples({
+      label,
+      hindi,
+      count,
+      onSaved: (words, saved) => {
+        setCustomWords(words);
+        setRecordingSign(prev => prev && { ...prev, saved });
+      },
+      onDone: () => setRecordingSign(null),
+    });
+  };
+
+  const handleDeleteSign = async (label) => {
+    try {
+      setCustomWords(await ISLModelClassifier.deleteCustomSign(modelServerUrl, label));
+    } catch (err) {
+      console.warn('Could not delete sign:', err);
+      setCustomWordsError('Could not delete the sign. Is the model server running?');
+    }
+  };
+
+  /**
+   * Sentence Builder: translate the signed words into an English sentence + Hindi (Groq)
+   */
+  const translateWords = useCallback(async (words) => {
+    setSentenceStatus({ state: 'working', message: 'Translating...' });
+    try {
+      const result = await ISLModelClassifier.makeSentence(modelServerUrl, words);
+      const ts = TranscriptManager.formatTimestamp();
+      const gloss = words.join(' ').toUpperCase();
+
+      setCurrentCaption(result.english);
+      setHindiCaption(result.hindi || '');
+      setIslGloss(gloss);
+      setConfidence(null);
+      setTimestamp(ts);
+      setSource('sentence');
+      setSourceLabel(`Sentence by Groq (${result.model})`);
+      setHistory(prev => [
+        ...prev,
+        {
+          id: 'sentence-' + Date.now(),
+          text: result.english,
+          hindiText: result.hindi,
+          islGloss: gloss,
+          confidence: null,
+          timestamp: ts,
+          source: 'sentence',
+          domain: 'sentence',
+        }
+      ]);
+      SpeechSynthesizer.speak(result.english, { rate: speechRate || 1.0, pitch: 1.0 });
+
+      // Words signed while Groq was answering stay for the next sentence
+      setSentenceWords(prev => prev.slice(words.length));
+      setSentenceStatus(null);
+    } catch (err) {
+      console.warn('Sentence building failed:', err);
+      setSentenceStatus({ state: 'error', message: err.message });
+    }
+  }, [modelServerUrl, speechRate]);
+
+  // Auto-translate: once the signer pauses (no sign being recorded or recognized), translate what was signed
+  useEffect(() => {
+    const signing = modelStatus?.state === 'recording' || modelStatus?.state === 'predicting';
+    if (!autoTranslate || sentenceWords.length === 0 || sentenceStatus || signing) return undefined;
+    const timer = setTimeout(() => translateWords(sentenceWords), AUTO_TRANSLATE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [autoTranslate, sentenceWords, sentenceStatus, modelStatus, translateWords]);
 
   /**
    * Trigger sample demo phrase (from demo suite or sign library)
@@ -567,6 +694,42 @@ export default function App() {
             </div>
 
           </div>
+
+          {/* Sentence Builder: recognized words → sentence + Hindi (automatic when the signer pauses) */}
+          <div className="mt-6">
+            <SentenceBuilder
+              words={sentenceWords}
+              status={sentenceStatus}
+              autoTranslate={autoTranslate}
+              setAutoTranslate={setAutoTranslate}
+              autoDelaySeconds={AUTO_TRANSLATE_DELAY_MS / 1000}
+              onMakeSentence={() => translateWords(sentenceWords)}
+              onUndo={() => setSentenceWords(prev => prev.slice(0, -1))}
+              onClear={() => {
+                setSentenceWords([]);
+                setSentenceStatus(null);
+              }}
+            />
+          </div>
+
+          {/* My Signs: teach the ISL model your own words */}
+          {recognitionEngine === 'model' && (
+            <div className="mt-6">
+              <MySignsPanel
+                words={customWords}
+                error={customWordsError}
+                cameraLive={cameraStatus === 'live'}
+                recordingSign={recordingSign}
+                onRecord={handleRecordSign}
+                onCancelRecording={() => islModelRef.current.cancelRecording()}
+                onDelete={handleDeleteSign}
+                onRefresh={refreshCustomWords}
+                onlyCustomSigns={onlyCustomSigns}
+                setOnlyCustomSigns={setOnlyCustomSigns}
+                onStartCamera={startCameraFlow}
+              />
+            </div>
+          )}
 
         </section>
 

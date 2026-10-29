@@ -13,7 +13,7 @@ import {
   RefreshCw,
   AlertCircle
 } from 'lucide-react';
-import { KaggleISLModelClassifier } from '../utils/signClassifierAdapter';
+import { ISLModelClassifier, DEFAULT_MODEL_SERVER_URL } from '../utils/signClassifierAdapter';
 
 export default function SettingsModal({
   isOpen,
@@ -40,11 +40,14 @@ export default function SettingsModal({
   const handleTestServer = async () => {
     setServerCheck({ state: 'checking', message: 'Contacting server...' });
     try {
-      const health = await KaggleISLModelClassifier.checkHealth(modelServerUrl);
-      setServerCheck({ state: 'ok', message: `Connected: ${health.model} on ${health.device}` });
+      const health = await ISLModelClassifier.checkHealth(modelServerUrl);
+      setServerCheck({
+        state: 'ok',
+        message: `Connected: ${health.model} on ${health.device}, ${health.custom_words ?? 0} of your signs`,
+      });
     } catch (err) {
       console.warn('Model server health check failed:', err);
-      setServerCheck({ state: 'error', message: 'Not reachable. Check the URL and that the Kaggle notebook is still running.' });
+      setServerCheck({ state: 'error', message: 'Not reachable. Check that the model server is running (see SETUP.md).' });
     }
   };
 
@@ -89,7 +92,7 @@ export default function SettingsModal({
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'heuristic', label: 'On-Device Gestures', desc: '10+ hand shapes, fully offline' },
-                { id: 'kaggle', label: 'Pretrained ISL Model', desc: '263 INCLUDE words via Kaggle' },
+                { id: 'model', label: 'ISL Model + My Signs', desc: '263 words + your own, local server' },
               ].map(engine => (
                 <button
                   key={engine.id}
@@ -106,11 +109,11 @@ export default function SettingsModal({
               ))}
             </div>
 
-            {recognitionEngine === 'kaggle' && (
+            {recognitionEngine === 'model' && (
               <div className="space-y-2 pt-1">
                 <label htmlFor="model-server-url" className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
                   <Server className="w-3 h-3 text-cyan-400" />
-                  <span>Kaggle Model Server URL</span>
+                  <span>Model Server URL</span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -121,7 +124,7 @@ export default function SettingsModal({
                       setModelServerUrl(e.target.value.trim());
                       setServerCheck(null);
                     }}
-                    placeholder="https://your-tunnel.trycloudflare.com"
+                    placeholder={DEFAULT_MODEL_SERVER_URL}
                     className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-navy-950 border border-slate-800 text-xs text-white font-mono focus:border-cyan-500 focus:outline-none"
                   />
                   <button
@@ -143,7 +146,7 @@ export default function SettingsModal({
                   </p>
                 )}
                 <p className="text-[11px] text-slate-400">
-                  Run <code className="text-cyan-300 font-mono">kaggle/learnable_isl_server.ipynb</code> on Kaggle and paste the URL it prints. Only body and hand landmark coordinates are sent to it — never video.
+                  Start it on this computer with <code className="text-cyan-300 font-mono">python -m uvicorn server.app:app --port 8000</code> (see SETUP.md). Only body and hand landmark coordinates are sent to it — never video.
                 </p>
               </div>
             )}
