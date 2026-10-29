@@ -136,7 +136,7 @@ export default function App() {
   const animFrameIdRef = useRef(null);
   const lastAddCaptionTimeRef = useRef(0);
   const frameCountRef = useRef(0);
-  const lastFpsCheckTimeRef = useRef(performance.now());
+  const lastFpsCheckTimeRef = useRef(0);
 
   /**
    * Show a live recognition result (heuristic gesture or pretrained model) and log it
@@ -193,22 +193,22 @@ export default function App() {
       if (detectorRef.current) {
         detectorRef.current.destroy();
       }
-      poseDetectorRef.current.destroy();
-      islModelRef.current.reset();
+      poseDetectorRef.current?.destroy();
+      islModelRef.current?.reset();
       SpeechSynthesizer.stop();
     };
-  }, []);
+  }, [pageName]);
 
   // Keep the ISL model client in sync with the selected engine and server URL
   // (info pages have no camera workspace, so there is no client to sync)
   useEffect(() => {
     if (pageName !== 'home') return;
     recognitionEngineRef.current = recognitionEngine;
-    islModelRef.current.reset();
+    islModelRef.current?.reset();
 
     // The body pose tracker is only needed (and downloaded) for the ISL model
     if (recognitionEngine === 'model' && cameraStatus === 'live') {
-      poseDetectorRef.current.initialize().catch((err) => {
+      poseDetectorRef.current?.initialize()?.catch((err) => {
         console.error('PoseLandmarker failed to load:', err);
         setModelStatus({ state: 'error', message: 'Could not load the body pose tracker' });
       });
@@ -217,12 +217,12 @@ export default function App() {
 
   useEffect(() => {
     if (pageName !== 'home') return;
-    islModelRef.current.setServerUrl(modelServerUrl);
+    islModelRef.current?.setServerUrl(modelServerUrl);
   }, [pageName, modelServerUrl]);
 
   useEffect(() => {
     if (pageName !== 'home') return;
-    islModelRef.current.setOnlyCustom(onlyCustomSigns);
+    islModelRef.current?.setOnlyCustom(onlyCustomSigns);
   }, [pageName, onlyCustomSigns]);
 
   // Load the user's recorded signs from the model server
