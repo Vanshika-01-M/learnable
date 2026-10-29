@@ -1,15 +1,13 @@
 import React from 'react';
 import { 
-  ArrowRight, 
   Sparkles, 
-  Video, 
   ShieldCheck, 
   Cpu, 
   Eye, 
   Accessibility 
 } from 'lucide-react';
 
-export default function HeroSection({ onStartLive, onTryDemo }) {
+export default function HeroSection({ onTryDemo }) {
   return (
     <section id="hero" className="relative pt-12 pb-16 md:pt-20 md:pb-24 overflow-hidden">
       {/* Background radial gradient glow */}
@@ -41,14 +39,6 @@ export default function HeroSection({ onStartLive, onTryDemo }) {
 
         {/* Action Buttons */}
         <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
-          <button
-            onClick={onStartLive}
-            className="w-full sm:w-auto px-7 py-3.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white shadow-lg shadow-violet-600/30 hover:shadow-cyan-400/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
-          >
-            <Video className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            <span>Start Live Translation</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
 
           <button
             onClick={onTryDemo}
@@ -98,7 +88,7 @@ export default function HeroSection({ onStartLive, onTryDemo }) {
             </div>
             <div>
               <div className="text-xs font-semibold text-white">Accessibility First</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">High contrast, TTS & transcript export</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Readable captions, TTS & transcript export</div>
             </div>
           </div>
 

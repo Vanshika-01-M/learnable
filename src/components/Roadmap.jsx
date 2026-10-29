@@ -25,7 +25,7 @@ export default function Roadmap() {
         { title: '21 3D Hand Landmark Tracking', desc: 'MediaPipe Tasks Vision integration with glowing skeleton canvas overlay.', done: true },
         { title: 'Heuristic Geometric Recognizer', desc: 'Static ISL rule matching for core gestures (Hello, Thank You, Peace, Yes).', done: true },
         { title: 'Presenter Demo Mode Suite', desc: 'Simulated domain scenarios for hospital, banking, and emergency presentations.', done: true },
-        { title: 'Accessibility & Audio Speech', desc: 'High-contrast mode, adjustable font sizes, and Web Speech API text-to-speech output.', done: true },
+        { title: 'Accessibility & Audio Speech', desc: 'Light-theme interface, adjustable font sizes, and Web Speech API text-to-speech output.', done: true },
       ],
     },
     {

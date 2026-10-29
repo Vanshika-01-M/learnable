@@ -74,7 +74,7 @@ export default function PrivacySection() {
               Inclusive WCAG 2.1 Compliance
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Built for diverse access needs: high-contrast stark visual mode for low vision, adjustable font scaling, keyboard-first navigation with visible focus indicators, and screen-reader live announcements.
+              Built for diverse access needs: adjustable font scaling, keyboard-first navigation with visible focus indicators, and screen-reader live announcements.
             </p>
             <div className="mt-4 flex items-center gap-2 text-xs text-cyan-300 font-medium">
               <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />

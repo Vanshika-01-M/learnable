@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Sparkles, 
-  Sun, 
-  Moon, 
-  Video, 
   Menu, 
   X, 
   Sliders, 
@@ -16,12 +13,9 @@ import {
 } from 'lucide-react';
 
 export default function Navbar({ 
-  onStartSigning, 
   onOpenDemo, 
   onOpenSettings,
   onOpenLibrary,
-  highContrast, 
-  toggleHighContrast,
   activeSection,
   setActiveSection,
   signCount = 0,
@@ -89,7 +83,7 @@ export default function Navbar({
               Translation Studio
             </button>
             <button
-              onClick={() => scrollToSection('how-it-works')}
+              onClick={() => { window.location.href = '?page=how-it-works'; }}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                 activeSection === 'how-it-works' 
                   ? 'text-cyan-400 bg-cyan-950/40 border border-cyan-500/30' 
@@ -99,7 +93,7 @@ export default function Navbar({
               How It Works
             </button>
             <button
-              onClick={() => scrollToSection('use-cases')}
+              onClick={() => { window.location.href = '?page=use-cases'; }}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                 activeSection === 'use-cases' 
                   ? 'text-cyan-400 bg-cyan-950/40 border border-cyan-500/30' 
@@ -109,7 +103,7 @@ export default function Navbar({
               Use Cases
             </button>
             <button
-              onClick={() => scrollToSection('roadmap')}
+              onClick={() => { window.location.href = '?page=roadmap'; }}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                 activeSection === 'roadmap' 
                   ? 'text-cyan-400 bg-cyan-950/40 border border-cyan-500/30' 
@@ -136,19 +130,6 @@ export default function Navbar({
               </span>
             </button>
 
-            {/* High Contrast Toggle */}
-            <button
-              onClick={toggleHighContrast}
-              className={`p-2 rounded-lg border transition-all text-sm flex items-center gap-1.5 cursor-pointer ${
-                highContrast 
-                  ? 'bg-yellow-400 text-black border-yellow-300 font-bold' 
-                  : 'text-slate-300 hover:text-white bg-slate-800/60 border-slate-700/60 hover:border-slate-600'
-              }`}
-              title="Toggle High Contrast Mode (Accessibility)"
-              aria-label="Toggle High Contrast Mode"
-            >
-              {highContrast ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
 
             {/* Settings Modal Button */}
             <button
@@ -167,17 +148,9 @@ export default function Navbar({
               title="Launch InnoTech Presenter Demo Suite"
             >
               <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-              <span>Demo Suite</span>
+              <span>Try Demo</span>
             </button>
 
-            {/* Start Signing Primary CTA */}
-            <button
-              onClick={onStartSigning}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white shadow-md shadow-violet-600/25 hover:shadow-cyan-500/35 transition-all flex items-center gap-1.5 group cursor-pointer"
-            >
-              <Video className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-              <span>Start Signing</span>
-            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -188,15 +161,6 @@ export default function Navbar({
               title="Library"
             >
               <BookOpen className="w-4 h-4" />
-            </button>
-            <button
-              onClick={toggleHighContrast}
-              className={`p-2 rounded-lg border ${
-                highContrast ? 'bg-yellow-400 text-black border-yellow-300' : 'bg-slate-800/60 border-slate-700'
-              }`}
-              aria-label="Toggle High Contrast"
-            >
-              {highContrast ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -231,28 +195,28 @@ export default function Navbar({
             Sign Library & Add Signs ({signCount})
           </button>
           <button
-            onClick={() => scrollToSection('how-it-works')}
+            onClick={() => { window.location.href = '?page=how-it-works'; }}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2.5"
           >
             <HelpCircle className="w-4 h-4 text-violet-400" />
             How It Works
           </button>
           <button
-            onClick={() => scrollToSection('use-cases')}
+            onClick={() => { window.location.href = '?page=use-cases'; }}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2.5"
           >
             <Layers className="w-4 h-4 text-cyan-400" />
             Use Cases
           </button>
           <button
-            onClick={() => scrollToSection('roadmap')}
+            onClick={() => { window.location.href = '?page=roadmap'; }}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2.5"
           >
             <Milestone className="w-4 h-4 text-amber-400" />
             Roadmap
           </button>
 
-          <div className="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+          <div className="pt-3 border-t border-slate-800 grid grid-cols-1 gap-2">
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -262,16 +226,6 @@ export default function Navbar({
             >
               <Sparkles className="w-3.5 h-3.5 text-violet-400" />
               Demo Suite
-            </button>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onStartSigning();
-              }}
-              className="w-full py-2.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 to-cyan-500 text-white flex items-center justify-center gap-1.5"
-            >
-              <Video className="w-3.5 h-3.5" />
-              Start Signing
             </button>
           </div>
         </div>
