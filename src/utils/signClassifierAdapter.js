@@ -9,7 +9,7 @@
  *    including dynamic wave motion for "Goodbye / Bye!".
  * 2. Instructions on how to add custom geometric gesture rules.
  * 3. Simulated Demo Classifier connected to custom user vocabulary.
- * 4. Pretrained ISL word model (OpenHands SL-GCN) served from a Kaggle notebook.
+ * 4. ISL model client (OpenHands SL-GCN + your recorded signs) for the local model server.
  */
 
 // Heuristic stability buffer to prevent jitter
@@ -300,11 +300,11 @@ export class SimulatedDemoClassifier {
 }
 
 /**
- * 3. Pretrained ISL Model (Kaggle server)
+ * 3. ISL Model (local model server)
  *
- * Streams body + hand landmarks (never video) to the Learnable model server
- * (see /server and /kaggle) running the AI4Bharat OpenHands SL-GCN model trained on
- * the INCLUDE dataset (263 isolated ISL words).
+ * Streams body + hand landmarks (never video) to the Learnable model server (see /server)
+ * running the AI4Bharat OpenHands SL-GCN model trained on the INCLUDE dataset
+ * (263 isolated ISL words), plus any signs the user records in the My Signs panel.
  *
  * Each frame uses the OpenHands MediaPipe Holistic layout of 75 [x, y] points:
  *   0-32 body pose, 33-53 signer's left hand, 54-74 signer's right hand (zeros if not visible).
@@ -369,19 +369,23 @@ export function buildHolisticFrame(poseLandmarks, handLandmarks = [], handedness
   return frame;
 }
 
-export class KaggleISLModelClassifier {
+export const DEFAULT_MODEL_SERVER_URL = 'http://localhost:8000';
+
+export class ISLModelClassifier {
   /**
    * @param {Object} options
-   * @param {string} options.serverUrl - public URL printed by the Kaggle notebook
+   * @param {string} options.serverUrl - model server URL (default http://localhost:8000)
    * @param {Function} options.onPrediction - called with a caption result for each recognized sign
    * @param {Function} options.onStatusChange - called with { state, message }
    * @param {number} options.minConfidence - below this, the sign is reported as uncertain
    */
-  constructor({ serverUrl = '', onPrediction, onStatusChange, minConfidence = 0.35 } = {}) {
-    this.serverUrl = serverUrl;
+  constructor({ serverUrl = DEFAULT_MODEL_SERVER_URL, onPrediction, onStatusChange, minConfidence = 0.35 } = {}) {
+    this.serverUrl = ISLModelClassifier.normalizeUrl(serverUrl);
     this.onPrediction = onPrediction || (() => {});
     this.onStatusChange = onStatusChange || (() => {});
     this.minConfidence = minConfidence;
+    this.onlyCustom = false;
+    this.recordTarget = null;
     this.reset();
   }
 
@@ -389,14 +393,75 @@ export class KaggleISLModelClassifier {
     return (url || '').trim().replace(/\/+$/, '');
   }
 
-  static async checkHealth(serverUrl) {
-    const response = await fetch(`${KaggleISLModelClassifier.normalizeUrl(serverUrl)}/health`);
+  static async request(serverUrl, path, options = {}) {
+    const response = await fetch(`${ISLModelClassifier.normalizeUrl(serverUrl)}${path}`, {
+      ...options,
+      headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+    });
     if (!response.ok) throw new Error(`Server responded with HTTP ${response.status}`);
     return response.json();
   }
 
+  static checkHealth(serverUrl) {
+    return ISLModelClassifier.request(serverUrl, '/health');
+  }
+
+  /** Words recorded in the My Signs panel: [{ label, hindi, samples }] */
+  static async listCustomSigns(serverUrl) {
+    return (await ISLModelClassifier.request(serverUrl, '/custom-signs')).words;
+  }
+
+  static async deleteCustomSign(serverUrl, label) {
+    const path = `/custom-signs/${encodeURIComponent(label)}`;
+    return (await ISLModelClassifier.request(serverUrl, path, { method: 'DELETE' })).words;
+  }
+
+  /** Turns recognized words into { english, hindi, model } via the server's Groq setup */
+  static async makeSentence(serverUrl, words) {
+    let response;
+    try {
+      response = await fetch(`${ISLModelClassifier.normalizeUrl(serverUrl)}/sentence`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ words }),
+      });
+    } catch {
+      throw new Error('Cannot reach the model server. Is it running?');
+    }
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : `Server responded with HTTP ${response.status}`);
+    return data;
+  }
+
   setServerUrl(url) {
-    this.serverUrl = KaggleISLModelClassifier.normalizeUrl(url);
+    this.serverUrl = ISLModelClassifier.normalizeUrl(url);
+  }
+
+  setOnlyCustom(onlyCustom) {
+    this.onlyCustom = onlyCustom;
+  }
+
+  /**
+   * Save the next `count` signs as samples of `label` instead of recognizing them.
+   * onSaved(words, saved) runs after each sample; onDone() when all are saved or recording is cancelled.
+   */
+  recordSamples({ label, hindi = '', count = 5, onSaved, onDone }) {
+    this.recordTarget = { label, hindi, count, saved: 0, onSaved: onSaved || (() => {}), onDone: onDone || (() => {}) };
+    this.setStatus('idle', this.idleMessage());
+  }
+
+  cancelRecording() {
+    const target = this.recordTarget;
+    this.recordTarget = null;
+    if (target) target.onDone();
+    this.setStatus('idle', this.idleMessage());
+  }
+
+  idleMessage() {
+    const t = this.recordTarget;
+    return t
+      ? `Sign "${t.label}" now (sample ${t.saved + 1} of ${t.count})`
+      : 'Raise your hands and sign one word';
   }
 
   reset() {
@@ -408,7 +473,7 @@ export class KaggleISLModelClassifier {
     this.handRun = 0;
     this.missRun = 0;
     this.nextSampleTime = null;
-    this.setStatus('idle', 'Raise your hands and sign one word');
+    this.setStatus('idle', this.idleMessage());
   }
 
   setStatus(state, message) {
@@ -462,10 +527,12 @@ export class KaggleISLModelClassifier {
       this.history = [];
       this.segment = [];
       this.handRun = 0;
-      if (enoughSigning) {
-        this.predict(frames);
-      } else {
+      if (!enoughSigning) {
         this.setStatus('idle', 'Too short. Hold the sign a little longer');
+      } else if (this.recordTarget) {
+        this.saveSample(frames);
+      } else {
+        this.predict(frames);
       }
     }
   }
@@ -488,12 +555,43 @@ export class KaggleISLModelClassifier {
     this.segment = kept.map(h => h.frame);
     this.handFrames = kept.filter(h => h.hasHands).length;
     this.missRun = 0;
-    this.setStatus('recording', 'Recording sign... lower your hands when done');
+    this.setStatus('recording', this.recordTarget
+      ? `Recording "${this.recordTarget.label}"... lower your hands when done`
+      : 'Recording sign... lower your hands when done');
+  }
+
+  async saveSample(frames) {
+    const target = this.recordTarget;
+    const generation = this.generation;
+    this.setStatus('predicting', `Saving sample of "${target.label}"...`);
+    try {
+      const { label, words } = await ISLModelClassifier.request(this.serverUrl, '/custom-signs', {
+        method: 'POST',
+        body: JSON.stringify({ label: target.label, hindi: target.hindi, frames }),
+      });
+      if (generation !== this.generation || target !== this.recordTarget) return;
+      target.saved++;
+      target.label = label;
+      target.onSaved(words, target.saved);
+      if (target.saved >= target.count) {
+        this.recordTarget = null;
+        target.onDone();
+        const samples = target.saved === 1 ? '1 sample' : `${target.saved} samples`;
+        if (this.mode !== 'recording') this.setStatus('idle', `Saved ${samples} of "${label}". Try signing it now`);
+      } else if (this.mode !== 'recording') {
+        this.setStatus('idle', `Saved. ${this.idleMessage()}`);
+      }
+    } catch (err) {
+      console.warn('Saving sign sample failed:', err);
+      if (generation === this.generation && this.mode !== 'recording') {
+        this.setStatus('error', 'Could not save the sample. Is the model server running?');
+      }
+    }
   }
 
   async predict(frames) {
     if (!this.serverUrl) {
-      this.setStatus('error', 'Add your Kaggle server URL in Settings');
+      this.setStatus('error', 'Set the model server URL in Settings');
       return;
     }
 
@@ -508,12 +606,19 @@ export class KaggleISLModelClassifier {
       const response = await fetch(`${this.serverUrl}/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ frames, top_k: 5 }),
+        body: JSON.stringify({ frames, top_k: 5, only_custom: this.onlyCustom }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const { predictions } = await response.json();
+      const { predictions, custom_words: customWords } = await response.json();
       if (generation !== this.generation) return;
+      if (predictions.length === 0) {
+        settle('idle', customWords
+          ? 'Not one of your recorded signs. Try again'
+          : 'No signs recorded yet. Add some in the My Signs panel');
+        return;
+      }
       const [top, ...alternatives] = predictions;
+      const isCustom = top.source === 'custom';
       const altText = alternatives.slice(0, 3).map(p => `${p.label} ${Math.round(p.confidence * 100)}%`).join(', ');
 
       if (top.confidence < this.minConfidence) {
@@ -525,17 +630,17 @@ export class KaggleISLModelClassifier {
       this.onPrediction({
         hasMatch: true,
         text: top.label,
-        hindiText: '',
+        hindiText: top.hindi || '',
         islGloss: top.label.toUpperCase(),
         confidence: top.confidence,
         domain: top.category,
         source: 'deep-model',
-        sourceLabel: 'Kaggle ISL Model (SL-GCN · INCLUDE)',
+        sourceLabel: isCustom ? 'My Signs (recorded by you)' : 'ISL Model (SL-GCN · INCLUDE)',
         explanation: altText ? `Other candidates: ${altText}` : 'Pretrained ISL word model',
       });
     } catch (err) {
       console.warn('ISL model server request failed:', err);
-      settle('error', 'Cannot reach the Kaggle server. Is the notebook running?');
+      settle('error', 'Cannot reach the model server. Is it running?');
     }
   }
 }

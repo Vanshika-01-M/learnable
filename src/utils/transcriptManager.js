@@ -61,6 +61,8 @@ export class TranscriptManager {
           ? '[Simulated Demo Phrase]'
           : item.source === 'deep-model'
           ? '[Pretrained ISL Model]'
+          : item.source === 'sentence'
+          ? '[AI Sentence (Groq)]'
           : '[Vision Classifier]';
 
         return `[${index + 1}] ${item.timestamp} | Confidence: ${confPercent}% ${sourceLabel}\n` +

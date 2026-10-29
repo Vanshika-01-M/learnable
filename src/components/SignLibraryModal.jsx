@@ -521,11 +521,11 @@ if (indexExtended && middleExtended && ringCurled && pinkyCurled && landmarks[8]
                     Method 3: Use the Pretrained ISL Model
                   </strong>
                   <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-mono">
-                    PyTorch on Kaggle
+                    PyTorch, local server
                   </span>
                 </div>
                 <p className="text-slate-400">
-                  Run <code className="text-cyan-300 font-mono">kaggle/learnable_isl_server.ipynb</code> on Kaggle, then pick <strong className="text-slate-200">Pretrained ISL Model</strong> in Settings. <code className="text-cyan-300 font-mono">KaggleISLModelClassifier</code> in <code className="text-violet-300 font-mono">src/utils/signClassifierAdapter.js</code> sends each sign as 75 body + hand landmarks per frame to the AI4Bharat OpenHands SL-GCN model (263 INCLUDE words).
+                  Start the model server (see SETUP.md), then pick <strong className="text-slate-200">ISL Model + My Signs</strong> in Settings. <code className="text-cyan-300 font-mono">ISLModelClassifier</code> in <code className="text-violet-300 font-mono">src/utils/signClassifierAdapter.js</code> sends each sign as 75 body + hand landmarks per frame to the AI4Bharat OpenHands SL-GCN model (263 INCLUDE words). Add your own words in the <strong className="text-slate-200">My Signs</strong> panel by recording each one 5 times.
                 </p>
               </div>
 

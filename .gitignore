@@ -26,3 +26,10 @@ dist-ssr
 # Python
 __pycache__/
 *.pyc
+.venv/
+
+# Your recorded signs (landmark data) stay on your computer
+server/user_data/
+
+# API keys
+server/.env

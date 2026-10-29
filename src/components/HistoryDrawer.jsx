@@ -112,7 +112,7 @@ export default function HistoryDrawer({
                             : 'bg-cyan-950/50 text-cyan-300 border-cyan-500/30'
                         }`}
                       >
-                        {isDemo ? 'Demo' : 'Vision'} {item.confidence ? `• ${Math.round(item.confidence * 100)}%` : ''}
+                        {isDemo ? 'Demo' : item.source === 'sentence' ? 'Sentence' : 'Vision'} {item.confidence ? `• ${Math.round(item.confidence * 100)}%` : ''}
                       </span>
                     </div>
 

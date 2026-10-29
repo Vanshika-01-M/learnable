@@ -121,9 +121,19 @@ class ISLRecognizer:
         self.model.to(self.device).eval()
 
     @torch.no_grad()
-    def predict(self, frames, top_k=5):
+    def analyze(self, frames):
+        """Returns (256-number fingerprint, 263-word probabilities) for one sign."""
         x = preprocess(frames).to(self.device)
-        probs = torch.softmax(self.model(x)[0], dim=-1).cpu()
+        embedding = self.model.encoder(x)
+        probs = torch.softmax(self.model.decoder(embedding)[0], dim=-1).cpu()
+        return embedding[0].cpu().numpy(), probs
+
+    def embed(self, frames):
+        return self.analyze(frames)[0]
+
+    def predict(self, frames, top_k=5, probs=None):
+        if probs is None:
+            probs = self.analyze(frames)[1]
         conf, idx = probs.topk(min(top_k, len(self.labels)))
         return [
             {**self.labels[i], "index": i, "confidence": round(c, 4)}
