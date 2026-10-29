@@ -30,8 +30,20 @@ export default function CameraPanel({
   videoRef,
   canvasRef,
   fps = 30,
+  recognitionEngine = 'heuristic', // 'heuristic' | 'kaggle'
+  modelStatus, // { state: 'idle' | 'recording' | 'predicting' | 'error', message }
 }) {
   const [showGuide, setShowGuide] = useState(true);
+  const isKaggleModel = recognitionEngine === 'kaggle';
+
+  const modelStatusStyles = {
+    recording: 'border-rose-400/50 text-rose-200',
+    predicting: 'border-violet-400/50 text-violet-200',
+    error: 'border-amber-400/50 text-amber-200',
+  }[modelStatus?.state] || 'border-slate-700/60 text-slate-300';
+
+  // A few of the 263 INCLUDE words the pretrained model knows
+  const sampleModelWords = ['Hello', 'Thank you', 'Good morning', 'How are you?', 'Mother', 'Father', 'Friend', 'Doctor', 'Hospital', 'Bank', 'Teacher'];
 
   const supportedLiveGestures = [
     { icon: '👋', name: 'Wave Bye', desc: 'Wave open hand side to side' },
@@ -142,6 +154,16 @@ export default function CameraPanel({
                 </span>
               </div>
             )}
+
+            {isKaggleModel && modelStatus && (
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy-900/90 border backdrop-blur-md max-w-[260px] ${modelStatusStyles}`}>
+                {modelStatus.state === 'recording' && <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse shrink-0" />}
+                {modelStatus.state === 'predicting' && <RefreshCw className="w-3 h-3 animate-spin shrink-0" />}
+                {modelStatus.state === 'error' && <AlertCircle className="w-3 h-3 shrink-0" />}
+                {modelStatus.state === 'idle' && <Activity className="w-3 h-3 text-violet-300 shrink-0" />}
+                <span className="text-[11px] leading-tight">{modelStatus.message}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -228,12 +250,16 @@ export default function CameraPanel({
         <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-navy-950/90 border border-slate-800 text-[11px] text-slate-300 backdrop-blur-sm">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>100% Local Processing — Zero Cloud Video</span>
+            <span>
+              {isKaggleModel
+                ? 'Zero Cloud Video — only landmarks go to your Kaggle model'
+                : '100% Local Processing — Zero Cloud Video'}
+            </span>
           </div>
 
           {cameraStatus === 'live' && (
             <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded bg-navy-950/80 text-[10px] text-slate-400 border border-slate-800">
-              <span>WebAssembly Vision</span>
+              <span>{isKaggleModel ? 'Pretrained ISL Model' : 'WebAssembly Vision'}</span>
             </div>
           )}
         </div>
@@ -248,15 +274,33 @@ export default function CameraPanel({
             className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 hover:text-white cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-            <span>Live Signs You Can Make (10+ Gestures)</span>
+            <span>{isKaggleModel ? 'Pretrained ISL Model (263 INCLUDE Words)' : 'Live Signs You Can Make (10+ Gestures)'}</span>
             {showGuide ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
           </button>
           <span className="text-[10px] text-cyan-300 font-mono">
-            Wave hand for Bye 👋
+            {isKaggleModel ? 'Upper body in view, one word per sign' : 'Wave hand for Bye 👋'}
           </span>
         </div>
 
-        {showGuide && (
+        {showGuide && isKaggleModel && (
+          <div className="py-1 space-y-1.5">
+            <p className="text-[11px] text-slate-400">
+              Start with hands down, sign one word, then lower your hands. The sign is sent when your hands leave the frame.
+            </p>
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin">
+              {sampleModelWords.map((word) => (
+                <span
+                  key={word}
+                  className="shrink-0 px-2.5 py-1 rounded-lg bg-navy-900 border border-slate-800 text-[11px] font-medium text-slate-200 whitespace-nowrap"
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showGuide && !isKaggleModel && (
           <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
             {supportedLiveGestures.map((g, idx) => (
               <div

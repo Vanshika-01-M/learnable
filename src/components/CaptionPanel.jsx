@@ -62,6 +62,7 @@ export default function CaptionPanel({
 
   const isDemo = source === 'demo';
   const isHeuristic = source === 'live-heuristic';
+  const isModel = source === 'deep-model';
   const confidencePercent = confidence ? Math.round(confidence * 100) : null;
 
   return (
@@ -88,6 +89,12 @@ export default function CaptionPanel({
                   Live Heuristic
                 </span>
               )}
+              {isModel && (
+                <span className="text-[10px] font-semibold text-violet-200 bg-violet-950/60 px-2 py-0.5 rounded-md border border-violet-500/30 flex items-center gap-1">
+                  <Activity className="w-3 h-3 text-violet-300" />
+                  Pretrained ISL Model
+                </span>
+              )}
             </h2>
             <p className="text-[11px] text-slate-400">Translated text display with speech synthesis</p>
           </div>
@@ -102,8 +109,10 @@ export default function CaptionPanel({
                 : 'bg-emerald-950/50 text-emerald-300 border-emerald-500/30'
             }`}
             title={
-              isDemo 
+              isDemo
                 ? 'Illustrative simulated confidence metric for presentation'
+                : isModel
+                ? 'Model probability for the top word (not a measured accuracy)'
                 : 'Geometric landmark match confidence'
             }
           >

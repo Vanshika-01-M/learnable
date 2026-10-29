@@ -1,14 +1,19 @@
-import React from 'react';
-import { 
-  X, 
-  Sliders, 
-  Camera, 
-  Volume2, 
-  Layers, 
-  CheckCircle2, 
+import React, { useState } from 'react';
+import {
+  X,
+  Sliders,
+  Camera,
+  Volume2,
+  Layers,
+  CheckCircle2,
   Palette,
-  Shield
+  Shield,
+  BrainCircuit,
+  Server,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
+import { KaggleISLModelClassifier } from '../utils/signClassifierAdapter';
 
 export default function SettingsModal({
   isOpen,
@@ -22,8 +27,26 @@ export default function SettingsModal({
   setSpeechRate,
   resolution,
   setResolution,
+  recognitionEngine,
+  setRecognitionEngine,
+  modelServerUrl,
+  setModelServerUrl,
 }) {
+  // { state: 'checking' | 'ok' | 'error', message }
+  const [serverCheck, setServerCheck] = useState(null);
+
   if (!isOpen) return null;
+
+  const handleTestServer = async () => {
+    setServerCheck({ state: 'checking', message: 'Contacting server...' });
+    try {
+      const health = await KaggleISLModelClassifier.checkHealth(modelServerUrl);
+      setServerCheck({ state: 'ok', message: `Connected: ${health.model} on ${health.device}` });
+    } catch (err) {
+      console.warn('Model server health check failed:', err);
+      setServerCheck({ state: 'error', message: 'Not reachable. Check the URL and that the Kaggle notebook is still running.' });
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md animate-fadeIn">
@@ -56,7 +79,76 @@ export default function SettingsModal({
 
         {/* Settings Body */}
         <div className="p-5 sm:p-6 space-y-6 overflow-y-auto max-h-[75vh]">
-          
+
+          {/* Recognition Engine */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-white flex items-center gap-2">
+              <BrainCircuit className="w-3.5 h-3.5 text-violet-400" />
+              <span>Sign Recognition Engine</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: 'heuristic', label: 'On-Device Gestures', desc: '10+ hand shapes, fully offline' },
+                { id: 'kaggle', label: 'Pretrained ISL Model', desc: '263 INCLUDE words via Kaggle' },
+              ].map(engine => (
+                <button
+                  key={engine.id}
+                  onClick={() => setRecognitionEngine(engine.id)}
+                  className={`p-2.5 rounded-xl border text-left transition-all ${
+                    recognitionEngine === engine.id
+                      ? 'bg-violet-950/80 border-cyan-400 text-white shadow-sm'
+                      : 'bg-navy-950 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <div className="text-xs font-semibold">{engine.label}</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">{engine.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            {recognitionEngine === 'kaggle' && (
+              <div className="space-y-2 pt-1">
+                <label htmlFor="model-server-url" className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Server className="w-3 h-3 text-cyan-400" />
+                  <span>Kaggle Model Server URL</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="model-server-url"
+                    type="url"
+                    value={modelServerUrl}
+                    onChange={(e) => {
+                      setModelServerUrl(e.target.value.trim());
+                      setServerCheck(null);
+                    }}
+                    placeholder="https://your-tunnel.trycloudflare.com"
+                    className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-navy-950 border border-slate-800 text-xs text-white font-mono focus:border-cyan-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleTestServer}
+                    disabled={!modelServerUrl || serverCheck?.state === 'checking'}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 disabled:opacity-40 shrink-0"
+                  >
+                    Test
+                  </button>
+                </div>
+                {serverCheck && (
+                  <p className={`text-[11px] flex items-start gap-1.5 ${
+                    serverCheck.state === 'ok' ? 'text-emerald-300' : serverCheck.state === 'error' ? 'text-rose-300' : 'text-slate-400'
+                  }`}>
+                    {serverCheck.state === 'ok' && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
+                    {serverCheck.state === 'error' && <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
+                    {serverCheck.state === 'checking' && <RefreshCw className="w-3.5 h-3.5 shrink-0 animate-spin" />}
+                    <span>{serverCheck.message}</span>
+                  </p>
+                )}
+                <p className="text-[11px] text-slate-400">
+                  Run <code className="text-cyan-300 font-mono">kaggle/learnable_isl_server.ipynb</code> on Kaggle and paste the URL it prints. Only body and hand landmark coordinates are sent to it — never video.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Camera Device Selection */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white flex items-center gap-2">
