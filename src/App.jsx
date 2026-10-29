@@ -16,10 +16,28 @@ import InfoPage from './components/InfoPage';
 
 import { WebcamManager } from './utils/webcamManager';
 import { HandLandmarkDetector } from './utils/handLandmarkDetector';
-import { HeuristicISLClassifier, SimulatedDemoClassifier } from './utils/signClassifierAdapter';
+import { PoseLandmarkDetector } from './utils/poseLandmarkDetector';
+import {
+  HeuristicISLClassifier,
+  SimulatedDemoClassifier,
+  KaggleISLModelClassifier,
+  buildHolisticFrame,
+} from './utils/signClassifierAdapter';
 import { TranscriptManager } from './utils/transcriptManager';
 import { SpeechSynthesizer } from './utils/speechSynthesizer';
 import { getAllPhrases } from './utils/demoData';
+
+// Recognition engine preferences persist across reloads (the Kaggle URL is tedious to re-paste)
+const ENGINE_STORAGE_KEY = 'learnable_recognition_engine';
+const SERVER_URL_STORAGE_KEY = 'learnable_model_server_url';
+
+function readStoredSetting(key, fallback) {
+  try {
+    return localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export default function App() {
   const pageName = new URLSearchParams(window.location.search).get('page') || 'home';
@@ -57,6 +75,11 @@ export default function App() {
   const [overlayColor, setOverlayColor] = useState('cyan');
   const [speechRate, setSpeechRate] = useState(1.0);
 
+  // Recognition engine: on-device heuristic gestures or the pretrained ISL model on Kaggle
+  const [recognitionEngine, setRecognitionEngine] = useState(() => readStoredSetting(ENGINE_STORAGE_KEY, 'heuristic'));
+  const [modelServerUrl, setModelServerUrl] = useState(() => readStoredSetting(SERVER_URL_STORAGE_KEY, ''));
+  const [modelStatus, setModelStatus] = useState(null);
+
   // Captions & Translation State
   const [currentCaption, setCurrentCaption] = useState('Hello, welcome to Learnable!');
   const [hindiCaption, setHindiCaption] = useState('नमस्ते, लर्नेबल में आपका स्वागत है!');
@@ -85,16 +108,54 @@ export default function App() {
   const canvasRef = useRef(null);
   const webcamManagerRef = useRef(null);
   const detectorRef = useRef(null);
+  const poseDetectorRef = useRef(null);
+  const islModelRef = useRef(null);
+  const recognitionEngineRef = useRef(recognitionEngine);
   const animFrameIdRef = useRef(null);
   const lastAddCaptionTimeRef = useRef(0);
   const frameCountRef = useRef(0);
   const lastFpsCheckTimeRef = useRef(performance.now());
+
+  /**
+   * Show a live recognition result (heuristic gesture or pretrained model) and log it
+   */
+  const showLiveMatch = (match, domain) => {
+    const ts = TranscriptManager.formatTimestamp();
+
+    setCurrentCaption(match.text);
+    setHindiCaption(match.hindiText || '');
+    setIslGloss(match.islGloss || '');
+    setConfidence(match.confidence);
+    setTimestamp(ts);
+    setSource(match.source);
+    setSourceLabel(match.sourceLabel);
+
+    // Add to session transcript history
+    setHistory(prev => [
+      ...prev,
+      {
+        id: 'hist-' + Date.now(),
+        text: match.text,
+        hindiText: match.hindiText,
+        islGloss: match.islGloss,
+        confidence: match.confidence,
+        timestamp: ts,
+        source: match.source,
+        domain: domain || 'general',
+      }
+    ]);
+  };
 
   // Instantiate Singletons
   useEffect(() => {
     if (pageName !== 'home') return undefined;
     webcamManagerRef.current = new WebcamManager();
     detectorRef.current = new HandLandmarkDetector();
+    poseDetectorRef.current = new PoseLandmarkDetector();
+    islModelRef.current = new KaggleISLModelClassifier({
+      onPrediction: (match) => showLiveMatch(match, match.domain),
+      onStatusChange: setModelStatus,
+    });
 
     // Check available cameras
     WebcamManager.getVideoDevices().then((devices) => {
@@ -106,10 +167,47 @@ export default function App() {
       if (detectorRef.current) {
         detectorRef.current.destroy();
       }
+      poseDetectorRef.current.destroy();
+      islModelRef.current.reset();
       SpeechSynthesizer.stop();
     };
   }, []);
 
+  // Keep the Kaggle model client in sync with the selected engine and server URL
+  useEffect(() => {
+    recognitionEngineRef.current = recognitionEngine;
+    islModelRef.current.reset();
+
+    // The body pose tracker is only needed (and downloaded) for the pretrained model
+    if (recognitionEngine === 'kaggle' && cameraStatus === 'live') {
+      poseDetectorRef.current.initialize().catch((err) => {
+        console.error('PoseLandmarker failed to load:', err);
+        setModelStatus({ state: 'error', message: 'Could not load the body pose tracker' });
+      });
+    }
+  }, [recognitionEngine, cameraStatus]);
+
+  useEffect(() => {
+    islModelRef.current.setServerUrl(modelServerUrl);
+  }, [modelServerUrl]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(ENGINE_STORAGE_KEY, recognitionEngine);
+      localStorage.setItem(SERVER_URL_STORAGE_KEY, modelServerUrl);
+    } catch {
+      // Storage unavailable (e.g. private mode); settings just won't persist
+    }
+  }, [recognitionEngine, modelServerUrl]);
+
+  // Sync High Contrast class to html body
+  useEffect(() => {
+    if (highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+  }, [highContrast]);
 
   // Handle resolution dimensions
   const getResolutionDimensions = () => {
@@ -165,6 +263,17 @@ export default function App() {
     // Extract landmarks from current video frame
     const result = detector.detectForVideo(video);
 
+    // Pretrained ISL model: stream body + hand landmarks of each new frame (never video)
+    const useKaggleModel = recognitionEngineRef.current === 'kaggle';
+    if (result && useKaggleModel && poseDetectorRef.current.isReady) {
+      const pose = poseDetectorRef.current.detectForVideo(video);
+      islModelRef.current.pushFrame(
+        buildHolisticFrame(pose, result.landmarks, result.handednesses),
+        result.landmarks.length > 0,
+        now
+      );
+    }
+
     if (result && result.landmarks && result.landmarks.length > 0) {
       setIsHandDetected(true);
       setHandCount(result.landmarks.length);
@@ -181,39 +290,16 @@ export default function App() {
         if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
 
-      // Check heuristic sign match on primary hand
+      // Check heuristic sign match on primary hand (the pretrained model reports asynchronously)
       const primaryLandmarks = result.landmarks[0];
-      const match = HeuristicISLClassifier.evaluateHand(primaryLandmarks);
+      const match = useKaggleModel ? null : HeuristicISLClassifier.evaluateHand(primaryLandmarks);
 
       if (match && match.hasMatch) {
         const timeNow = Date.now();
         // Prevent flood: debounce 2.2 seconds between automatic live detections
         if (timeNow - lastAddCaptionTimeRef.current > 2200) {
           lastAddCaptionTimeRef.current = timeNow;
-          const ts = TranscriptManager.formatTimestamp();
-
-          setCurrentCaption(match.text);
-          setHindiCaption(match.hindiText || '');
-          setIslGloss(match.islGloss || '');
-          setConfidence(match.confidence);
-          setTimestamp(ts);
-          setSource(match.source);
-          setSourceLabel(match.sourceLabel);
-
-          // Add to session transcript history
-          setHistory(prev => [
-            ...prev,
-            {
-              id: 'hist-' + Date.now(),
-              text: match.text,
-              hindiText: match.hindiText,
-              islGloss: match.islGloss,
-              confidence: match.confidence,
-              timestamp: ts,
-              source: match.source,
-              domain: selectedDomain || 'general',
-            }
-          ]);
+          showLiveMatch(match, selectedDomain);
         }
       }
 
@@ -464,6 +550,8 @@ export default function App() {
                 videoRef={videoRef}
                 canvasRef={canvasRef}
                 fps={fps}
+                recognitionEngine={recognitionEngine}
+                modelStatus={modelStatus}
               />
             </div>
 
@@ -540,6 +628,10 @@ export default function App() {
         setSpeechRate={setSpeechRate}
         resolution={resolution}
         setResolution={setResolution}
+        recognitionEngine={recognitionEngine}
+        setRecognitionEngine={setRecognitionEngine}
+        modelServerUrl={modelServerUrl}
+        setModelServerUrl={setModelServerUrl}
       />
 
       {/* Session History Drawer */}
