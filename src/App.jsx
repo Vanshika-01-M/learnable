@@ -8,7 +8,6 @@ import DemoPresenterModal from './components/DemoPresenterModal';
 import SignLibraryModal from './components/SignLibraryModal';
 import HowItWorks from './components/HowItWorks';
 import UseCases from './components/UseCases';
-import PrivacySection from './components/PrivacySection';
 import Roadmap from './components/Roadmap';
 import HistoryDrawer from './components/HistoryDrawer';
 import SettingsModal from './components/SettingsModal';
@@ -519,9 +518,6 @@ export default function App() {
 
         {/* Use Cases Section */}
         <UseCases onSelectScenario={handleSelectScenario} />
-
-        {/* Privacy & Accessibility Section */}
-        <PrivacySection />
 
         {/* Progress & Roadmap Section */}
         <Roadmap />

@@ -109,16 +109,6 @@ export default function Navbar({
               Use Cases
             </button>
             <button
-              onClick={() => scrollToSection('privacy')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                activeSection === 'privacy' 
-                  ? 'text-cyan-400 bg-cyan-950/40 border border-cyan-500/30' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              Privacy & Ethics
-            </button>
-            <button
               onClick={() => scrollToSection('roadmap')}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                 activeSection === 'roadmap' 
@@ -253,13 +243,6 @@ export default function Navbar({
           >
             <Layers className="w-4 h-4 text-cyan-400" />
             Use Cases
-          </button>
-          <button
-            onClick={() => scrollToSection('privacy')}
-            className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2.5"
-          >
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            Privacy & Ethics
           </button>
           <button
             onClick={() => scrollToSection('roadmap')}
