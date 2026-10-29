@@ -2,7 +2,6 @@ import React from 'react';
 import { 
   Globe, 
   Type, 
-  Sun, 
   RotateCcw, 
   BookOpen, 
   FileText,
@@ -18,8 +17,6 @@ export default function TranslationControls({
   setSelectedDomain,
   captionFontSize,
   setCaptionFontSize,
-  highContrast,
-  toggleHighContrast,
   onResetSession,
   onToggleHistory,
   onOpenLibrary,
@@ -123,19 +120,6 @@ export default function TranslationControls({
             </button>
           </div>
 
-          {/* High Contrast Toggle */}
-          <button
-            onClick={toggleHighContrast}
-            className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-              highContrast
-                ? 'bg-yellow-400 text-black border-yellow-300 font-bold'
-                : 'bg-navy-950/70 text-slate-300 border-slate-800 hover:border-slate-700'
-            }`}
-            title="Toggle High-Contrast Mode for low-vision accessibility"
-          >
-            <Sun className="w-3.5 h-3.5" />
-            <span>High Contrast</span>
-          </button>
 
           {/* History Drawer Trigger */}
           <button

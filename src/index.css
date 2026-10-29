@@ -9,41 +9,6 @@
   }
 }
 
-/* High contrast mode overrides */
-.high-contrast {
-  --tw-bg-opacity: 1;
-  background-color: #000000 !important;
-  color: #ffffff !important;
-}
-
-.high-contrast * {
-  border-color: #ffffff !important;
-}
-
-.high-contrast .bg-navy-900,
-.high-contrast .bg-navy-850,
-.high-contrast .bg-navy-800,
-.high-contrast .bg-navy-750 {
-  background-color: #000000 !important;
-  border: 2px solid #ffff00 !important;
-}
-
-.high-contrast .text-slate-400,
-.high-contrast .text-slate-300,
-.high-contrast .text-slate-200 {
-  color: #ffffff !important;
-}
-
-.high-contrast .text-violet-400,
-.high-contrast .text-cyan-400 {
-  color: #ffff00 !important;
-  font-weight: 700;
-}
-
-.high-contrast button {
-  border: 2px solid #ffffff !important;
-}
-
 /* Custom subtle scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -51,30 +16,30 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0F19;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #253352;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3B4B70;
+  background: #94a3b8;
 }
 
 /* Glass card styling */
 .glass-panel {
-  background: rgba(16, 22, 37, 0.75);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
 .glass-panel-subtle {
-  background: rgba(16, 22, 37, 0.5);
+  background: rgba(248, 250, 252, 0.92);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(148, 163, 184, 0.28);
 }
 
 /* Smooth focus rings for accessibility */
@@ -82,3 +47,42 @@
   outline: 2px solid #22D3EE;
   outline-offset: 2px;
 }
+
+
+/* Learnable light-only design system: normalize the original dark utility palette. */
+:root { color-scheme: light; }
+html, body, #root { min-height: 100%; background: #f8fafc; color: #1e293b; }
+body { background-color: #f8fafc !important; color: #1e293b !important; }
+[class*="bg-navy-950"] { background-color: #f8fafc !important; }
+[class*="bg-navy-900"] { background-color: #ffffff !important; }
+[class*="bg-navy-850"] { background-color: #f8fafc !important; }
+[class*="bg-navy-800"], [class*="bg-navy-750"], [class*="bg-navy-700"] { background-color: #eef2f7 !important; }
+[class*="bg-slate-950"], [class*="bg-slate-900"] { background-color: #ffffff !important; }
+[class*="bg-slate-800"], [class*="bg-slate-700"] { background-color: #f1f5f9 !important; }
+[class*="bg-violet-950"] { background-color: #f3e8ff !important; }
+[class*="bg-cyan-950"] { background-color: #ecfeff !important; }
+[class*="bg-emerald-950"] { background-color: #ecfdf5 !important; }
+[class*="bg-amber-950"] { background-color: #fffbeb !important; }
+[class*="bg-rose-950"] { background-color: #fff1f2 !important; }
+[class*="border-slate-900"], [class*="border-slate-800"], [class*="border-slate-700"],
+[class*="border-slate-600"], [class*="border-violet-500/"], [class*="border-cyan-500/"],
+[class*="border-emerald-500/"], [class*="border-amber-500/"] { border-color: #e2e8f0 !important; }
+[class~="text-white"] { color: #172033 !important; }
+[class*="text-slate-100"], [class*="text-slate-200"], [class*="text-slate-300"] { color: #334155 !important; }
+[class*="text-slate-400"] { color: #475569 !important; }
+[class*="text-slate-500"], [class*="text-slate-600"] { color: #64748b !important; }
+[class*="text-violet-200"], [class*="text-violet-300"], [class*="text-violet-400"] { color: #6d28d9 !important; }
+[class*="text-cyan-200"], [class*="text-cyan-300"], [class*="text-cyan-400"] { color: #0e7490 !important; }
+[class*="text-emerald-200"], [class*="text-emerald-300"], [class*="text-emerald-400"] { color: #047857 !important; }
+[class*="text-amber-200"], [class*="text-amber-300"], [class*="text-amber-400"] { color: #92400e !important; }
+[class*="text-rose-200"], [class*="text-rose-300"], [class*="text-rose-400"] { color: #be123c !important; }
+/* Keep white text on primary saturated CTAs, where it remains legible. */
+button.text-white[class*="bg-violet-"], button.text-white[class*="bg-cyan-"],
+button.text-white[class*="bg-gradient"], a.text-white[class*="bg-violet-"],
+a.text-white[class*="bg-gradient"], [class*="bg-gradient-to-r"].text-white {
+  color: #ffffff !important;
+}
+select, option, input, textarea { color: #1e293b; }
+select option { background: #ffffff; color: #1e293b; }
+[class*="hover:text-white"]:hover { color: #6d28d9 !important; }
+.glass-panel { box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
