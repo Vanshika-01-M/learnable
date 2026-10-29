@@ -59,6 +59,8 @@ export class TranscriptManager {
           ? '[Live Heuristic Vision]'
           : item.source === 'demo'
           ? '[Simulated Demo Phrase]'
+          : item.source === 'deep-model'
+          ? '[Pretrained ISL Model]'
           : '[Vision Classifier]';
 
         return `[${index + 1}] ${item.timestamp} | Confidence: ${confPercent}% ${sourceLabel}\n` +

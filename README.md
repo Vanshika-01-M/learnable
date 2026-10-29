@@ -17,14 +17,14 @@ Learnable bridges communication barriers for deaf and hard-of-hearing individual
 Camera Input (Webcam) 
   → 21 3D Landmark Detection (MediaPipe WebAssembly) 
     → Spatial & Feature Extraction (Bone Angles & Velocity) 
-      → Sign Recognition Adapter (Heuristic ISL & Modular AI Slot) 
+      → Sign Recognition Adapter (Heuristic ISL, or Pretrained ISL Model on a Kaggle server)
         → Natural Language Captions (Readable Text, Hindi, ISL Gloss & Speech TTS)
 ```
 
 ### Essential Technical Distinction (Ethical AI Principle)
 * **Computer Vision Landmark Tracking** tracks anatomical hand joints in real time directly on your device.
 * **Landmark tracking is NOT sign translation**. Sign language involves complex spatio-temporal trajectories, syntax, and non-manual expressions.
-* For static poses, Learnable includes a **Live Heuristic Classifier** (Alpha). For complex continuous sentences, it provides a **Presenter Demo Suite** (Simulated) and an extensible **Model Adapter Interface** for attaching a trained deep learning model.
+* For static poses, Learnable includes a **Live Heuristic Classifier** (Alpha). For isolated ISL words, it can use a **Pretrained ISL Model** (OpenHands SL-GCN, 263 words) hosted on Kaggle. For complex continuous sentences, it provides a **Presenter Demo Suite** (Simulated).
 
 ---
 
@@ -47,6 +47,7 @@ Camera Input (Webcam)
   - ✊ **Yes / Understood**: Closed fist affirmative
   - 🤘 **Rock On / Awesome**: Index and pinky extended
   - 3️⃣ **Number 3** & 4️⃣ **Number 4** numerical signs
+- **Pretrained ISL Word Recognition (Kaggle)**: Switch Settings → *Sign Recognition Engine* to **Pretrained ISL Model** to recognize 263 Indian Sign Language words with the AI4Bharat OpenHands SL-GCN model, served from a free Kaggle notebook (see [Section 6](#6-pretrained-isl-model-on-kaggle)).
 - **Interactive Live Gesture Cheat Sheet**: Collapsible on-screen visual guide showing all supported camera postures so users know exactly what to sign.
 - **Large Accessible Captions**: High-visibility typography with adjustable font scaling (`Normal`, `Large`, `Extra Large`), Hindi translation, and ISL grammatical glosses.
 - **Text-to-Speech (TTS)**: Built-in voice playback via the browser Web Speech API for audible two-way communication.
@@ -99,10 +100,19 @@ learnable/
 │   └── utils/
 │       ├── webcamManager.js    # Camera acquisition, permissions, and lifecycle
 │       ├── handLandmarkDetector.js # MediaPipe 21-joint extraction & canvas drawing
-│       ├── signClassifierAdapter.js # Modular recognition adapter & heuristics
+│       ├── poseLandmarkDetector.js # MediaPipe 33-point body pose (for the pretrained model)
+│       ├── signClassifierAdapter.js # Heuristics + Kaggle ISL model client & sign segmentation
 │       ├── demoData.js         # Predefined ISL sample phrases & domains
 │       ├── transcriptManager.js # Transcript formatting, copy & .txt download
 │       └── speechSynthesizer.js # Web Speech API text-to-speech audio engine
+├── server/                     # Python model server (FastAPI + PyTorch)
+│   ├── app.py                  # /health, /labels, /predict endpoints
+│   ├── isl_model.py            # Checkpoint download, preprocessing & inference
+│   ├── slgcn.py                # SL-GCN network (adapted from AI4Bharat OpenHands)
+│   ├── include_labels.json     # The 263 INCLUDE words, in model output order
+│   └── kaggle_runner.py        # Starts the API + a Cloudflare tunnel on Kaggle
+└── kaggle/
+    └── learnable_isl_server.ipynb # Run this notebook on Kaggle to host the model
 ```
 
 ---
@@ -117,7 +127,7 @@ learnable/
 
 1. **Navigate to the project directory**:
    ```bash
-   cd signspeak
+   cd learnable
    ```
 
 2. **Install dependencies**:
@@ -135,52 +145,58 @@ learnable/
 
 ---
 
-## 6. How to Connect a Real Sign-Recognition Deep Learning Model
+## 6. Pretrained ISL Model on Kaggle
 
-The codebase is built with a decoupled architecture specifically to enable dropping in a trained neural network without refactoring the UI.
+Learnable can recognize **263 isolated Indian Sign Language words** (greetings, people, places, colours, days, jobs and more) with the pretrained **SL-GCN** model from [AI4Bharat OpenHands](https://github.com/AI4Bharat/OpenHands), trained on the [INCLUDE](https://zenodo.org/records/4010759) dataset. The model runs in a free Kaggle notebook, and the web app talks to it over HTTPS.
 
-### Step-by-Step Integration Guide:
+```
+Browser: webcam → MediaPipe hands (21 pts × 2) + body pose (33 pts) → 75 [x, y] points per frame
+         → sign segmentation (hands up → sign → hands down) → POST /predict
+Kaggle:  FastAPI → OpenHands SL-GCN (PyTorch) → top-5 words → caption in the app
+```
 
-1. **Locate the Adapter Interface**:
-   Open `src/utils/signClassifierAdapter.js`.
+Only landmark coordinates are sent to the server. Camera video never leaves the browser.
 
-2. **Prepare Input Tensor Shape**:
-   The `detectForVideo` method generates 21 3D coordinates per frame `(x, y, z)`. A standard continuous sign classifier expects a temporal sliding window:
-   - Input shape: `[BatchSize = 1, TimeSteps = 30, Landmarks = 21, Coordinates = 3]`
+### Start the server on Kaggle
 
-3. **Load Model Weights (TensorFlow.js / ONNX Runtime Web)**:
-   ```javascript
-   import * as tf from '@tensorflow/tfjs';
-   // Or: import * as ort from 'onnxruntime-web';
+1. On [kaggle.com](https://www.kaggle.com), choose **Create → New Notebook → File → Import Notebook** and upload [`kaggle/learnable_isl_server.ipynb`](kaggle/learnable_isl_server.ipynb).
+2. In the notebook's right-hand panel (*Session options*), turn **Internet on**. This needs a phone-verified Kaggle account. **Accelerator: None** is enough (about 30 ms per sign on CPU).
+3. If this code isn't merged into `main` yet, set `BRANCH` in the first cell to the branch that contains the `server/` folder.
+4. Click **Run All**. The third code cell downloads the checkpoint (~40 MB, SHA-256 verified), starts the API, and prints a URL like `https://something.trycloudflare.com`.
+5. In Learnable, open **Settings → Sign Recognition Engine → Pretrained ISL Model**, paste the URL, and click **Test**.
 
-   export class TrainedISLModelAdapter {
-     constructor() {
-       this.model = null;
-     }
+Keep the notebook running while you use the app. The URL changes every time the notebook restarts, and Kaggle may stop idle sessions, so if the app says the server is unreachable, re-run the notebook and paste the new URL.
 
-     async loadModel() {
-       this.model = await tf.loadLayersModel('/models/isl_transformer/model.json');
-     }
+### Signing with the model
 
-     async predict(slidingWindowBuffer) {
-       const inputTensor = tf.tensor4d([slidingWindowBuffer]);
-       const prediction = this.model.predict(inputTensor);
-       const probabilities = await prediction.data();
-       const topIndex = prediction.argMax(-1).dataSync()[0];
-       
-       return {
-         hasMatch: true,
-         text: VOCABULARY_MAP[topIndex],
-         confidence: probabilities[topIndex],
-         source: 'deep-model',
-         sourceLabel: 'Trained ISL Transformer',
-       };
-     }
-   }
-   ```
+- Keep your head, shoulders and hands in view; the model uses body pose as well as hands.
+- Start with your hands down (out of frame), sign **one word**, then lower your hands. The sign is sent about 0.7 s after your hands leave the frame.
+- The camera panel shows the model status (*Recording sign… / Recognizing… / Recognized "Doctor"*). Results below 35% confidence are reported as "Not sure" instead of becoming a caption.
 
-4. **Connect in `App.jsx`**:
-   Replace the `HeuristicISLClassifier.evaluateHand()` call in the detection loop with your model instance.
+### Run the server on your own machine
+
+```bash
+pip install -r server/requirements.txt
+```
+
+```bash
+python -m uvicorn server.app:app --port 8000
+```
+
+Then use `http://localhost:8000` as the server URL. API:
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /health` | Model name, device, number of classes |
+| `GET /labels` | The 263 words with their INCLUDE category |
+| `POST /predict` | Body `{"frames": [[[x, y] × 75] × T], "top_k": 5}` → top-k words with confidence |
+
+Frame layout follows OpenHands' MediaPipe Holistic order: points 0–32 body pose, 33–53 signer's left hand, 54–74 signer's right hand (zeros when a hand is not visible), all in normalized image coordinates.
+
+### Credits
+
+- Model and checkpoint: [AI4Bharat OpenHands](https://github.com/AI4Bharat/OpenHands) (Apache-2.0). `server/slgcn.py` is adapted from its SL-GCN implementation.
+- Training data: [INCLUDE](https://zenodo.org/records/4010759) by AI4Bharat (CC BY 4.0).
 
 ---
 
@@ -188,6 +204,7 @@ The codebase is built with a decoupled architecture specifically to enable dropp
 
 * **Assistive Prototype**: Learnable is designed as an assistive tool for casual daily interactions. It does not replace certified professional sign language interpreters in critical legal, financial, or diagnostic medical settings.
 * **Accuracy Metrics**: As specified by responsible AI practices, unmeasured metrics are labeled as "Not yet measured" rather than presenting fabricated accuracy percentages.
+* **Pretrained Model Scope**: The Kaggle model recognizes one isolated word at a time from the 263-word INCLUDE vocabulary, which was recorded from a small group of signers standing in front of a camera. Its confidence is the model's probability, not a measured real-world accuracy. Expect lower accuracy with other signers, lighting, or camera framing. When it is enabled, body and hand landmark coordinates (not video) are sent to the Kaggle server you run.
 * **Continuous Grammar**: Indian Sign Language has its own distinct grammatical structure (OSV — Object Subject Verb). Full natural language translation requires rich multi-modal corpus collection currently planned for Phase 2.
 
 ---

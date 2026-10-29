@@ -518,14 +518,14 @@ if (indexExtended && middleExtended && ringCurled && pinkyCurled && landmarks[8]
               <div className="p-4 rounded-xl bg-navy-950 border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
                   <strong className="text-white text-sm">
-                    Method 3: Connect a Trained AI Neural Network
+                    Method 3: Use the Pretrained ISL Model
                   </strong>
                   <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-mono">
-                    ONNX Runtime / TensorFlow.js
+                    PyTorch on Kaggle
                   </span>
                 </div>
                 <p className="text-slate-400">
-                  For continuous dynamic sentences, plug your PyTorch/TensorFlow trained sequence model into <code className="text-cyan-300 font-mono">FutureDeepModelAdapter</code> in <code className="text-violet-300 font-mono">src/utils/signClassifierAdapter.js</code>. The input buffer delivers 30 consecutive frames of 21 3D joint landmarks `(30, 21, 3)`!
+                  Run <code className="text-cyan-300 font-mono">kaggle/learnable_isl_server.ipynb</code> on Kaggle, then pick <strong className="text-slate-200">Pretrained ISL Model</strong> in Settings. <code className="text-cyan-300 font-mono">KaggleISLModelClassifier</code> in <code className="text-violet-300 font-mono">src/utils/signClassifierAdapter.js</code> sends each sign as 75 body + hand landmarks per frame to the AI4Bharat OpenHands SL-GCN model (263 INCLUDE words).
                 </p>
               </div>
 
