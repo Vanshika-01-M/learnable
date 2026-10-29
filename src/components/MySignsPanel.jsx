@@ -215,7 +215,7 @@ export default function MySignsPanel({
                       <button
                         type="button"
                         onClick={() => { onDelete(w.label); setConfirmDelete(null); }}
-                        className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-rose-600 hover:bg-rose-500 text-white cursor-pointer"
+                        className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-rose-950/60 text-rose-300 border border-rose-500/40 hover:border-rose-400 cursor-pointer"
                       >
                         Delete?
                       </button>

@@ -43,9 +43,20 @@ export default function Footer({ onOpenDemo }) {
             <ul className="space-y-2">
               <li><a href="#hero" className="hover:text-white transition-colors">Overview</a></li>
               <li><a href="#workspace" className="hover:text-white transition-colors">Live Studio</a></li>
-              <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
-              <li><a href="#use-cases" className="hover:text-white transition-colors">Use Cases</a></li>
-              <li><a href="#roadmap" className="hover:text-white transition-colors">Roadmap</a></li>
+              <li><a href="?page=how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
+              <li><a href="?page=use-cases" className="hover:text-white transition-colors">Use Cases</a></li>
+              <li><a href="?page=roadmap" className="hover:text-white transition-colors">Roadmap</a></li>
+            </ul>
+          </div>
+
+          {/* Help & Support */}
+          <div className="space-y-2.5">
+            <div className="text-slate-900 font-semibold uppercase tracking-wider text-[11px]">Help & Support</div>
+            <ul className="space-y-2">
+              <li><a href="?page=support" className="hover:text-violet-700 transition-colors">Support</a></li>
+              <li><a href="?page=contact" className="hover:text-violet-700 transition-colors">Contact</a></li>
+              <li><a href="?page=faqs" className="hover:text-violet-700 transition-colors">FAQs</a></li>
+              <li><a href="?page=privacy" className="hover:text-violet-700 transition-colors">Privacy</a></li>
             </ul>
           </div>
 
@@ -62,7 +73,7 @@ export default function Footer({ onOpenDemo }) {
               className="mt-2 px-3 py-1.5 rounded-lg bg-violet-950 text-violet-300 hover:text-white border border-violet-500/30 hover:border-violet-400 text-xs font-semibold flex items-center gap-1.5 transition-all"
             >
               <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-              <span>Launch Demo Suite</span>
+              <span>Try Demo</span>
             </button>
           </div>
 

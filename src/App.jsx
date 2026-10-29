@@ -12,6 +12,7 @@ import Roadmap from './components/Roadmap';
 import HistoryDrawer from './components/HistoryDrawer';
 import SettingsModal from './components/SettingsModal';
 import Footer from './components/Footer';
+import InfoPage from './components/InfoPage';
 
 import { WebcamManager } from './utils/webcamManager';
 import { HandLandmarkDetector } from './utils/handLandmarkDetector';
@@ -43,9 +44,10 @@ function readStoredSetting(key, fallback) {
 }
 
 export default function App() {
+  const pageName = new URLSearchParams(window.location.search).get('page') || 'home';
   // Navigation & Modal States
   const [activeSection, setActiveSection] = useState('hero');
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(() => new URLSearchParams(window.location.search).get('demo') === '1');
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -57,8 +59,7 @@ export default function App() {
     setAllPhrases(getAllPhrases());
   }, []);
 
-  // Accessibility & Display Preferences
-  const [highContrast, setHighContrast] = useState(false);
+  // Display preferences
   const [captionFontSize, setCaptionFontSize] = useState('normal');
   const [selectedLanguage, setSelectedLanguage] = useState('ISL');
   const [selectedDomain, setSelectedDomain] = useState('all');
@@ -168,6 +169,7 @@ export default function App() {
 
   // Instantiate Singletons
   useEffect(() => {
+    if (pageName !== 'home') return undefined;
     webcamManagerRef.current = new WebcamManager();
     detectorRef.current = new HandLandmarkDetector();
     poseDetectorRef.current = new PoseLandmarkDetector();
@@ -193,7 +195,9 @@ export default function App() {
   }, []);
 
   // Keep the ISL model client in sync with the selected engine and server URL
+  // (info pages have no camera workspace, so there is no client to sync)
   useEffect(() => {
+    if (pageName !== 'home') return;
     recognitionEngineRef.current = recognitionEngine;
     islModelRef.current.reset();
 
@@ -207,10 +211,12 @@ export default function App() {
   }, [recognitionEngine, cameraStatus]);
 
   useEffect(() => {
+    if (pageName !== 'home') return;
     islModelRef.current.setServerUrl(modelServerUrl);
   }, [modelServerUrl]);
 
   useEffect(() => {
+    if (pageName !== 'home') return;
     islModelRef.current.setOnlyCustom(onlyCustomSigns);
   }, [onlyCustomSigns]);
 
@@ -229,7 +235,7 @@ export default function App() {
   ), [modelServerUrl]);
 
   useEffect(() => {
-    if (recognitionEngine === 'model') refreshCustomWords();
+    if (pageName === 'home' && recognitionEngine === 'model') refreshCustomWords();
   }, [recognitionEngine, refreshCustomWords]);
 
   useEffect(() => {
@@ -241,15 +247,6 @@ export default function App() {
       // Storage unavailable (e.g. private mode); settings just won't persist
     }
   }, [recognitionEngine, modelServerUrl, onlyCustomSigns]);
-
-  // Sync High Contrast class to html body
-  useEffect(() => {
-    if (highContrast) {
-      document.documentElement.classList.add('high-contrast');
-    } else {
-      document.documentElement.classList.remove('high-contrast');
-    }
-  }, [highContrast]);
 
   // Handle resolution dimensions
   const getResolutionDimensions = () => {
@@ -481,20 +478,6 @@ export default function App() {
   };
 
   /**
-   * Scroll down and activate camera
-   */
-  const handleStartSigning = () => {
-    setActiveSection('workspace');
-    const el = document.getElementById('workspace');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-    if (cameraStatus !== 'live') {
-      startCameraFlow();
-    }
-  };
-
-  /**
    * Trigger sample demo phrase (from demo suite or sign library)
    */
   const handleTriggerDemoPhrase = (phrase) => {
@@ -583,17 +566,16 @@ export default function App() {
     }
   };
 
+  if (pageName !== 'home') return <InfoPage page={pageName} />;
+
   return (
-    <div className="min-h-screen bg-navy-950 text-slate-100 flex flex-col font-sans selection:bg-violet-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-violet-200 selection:text-slate-900">
       
       {/* Navigation Bar */}
       <Navbar
-        onStartSigning={handleStartSigning}
         onOpenDemo={() => setIsDemoModalOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenLibrary={() => setIsLibraryOpen(true)}
-        highContrast={highContrast}
-        toggleHighContrast={() => setHighContrast(!highContrast)}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
         signCount={allPhrases.length}
@@ -604,7 +586,6 @@ export default function App() {
         
         {/* Hero Section */}
         <HeroSection
-          onStartLive={handleStartSigning}
           onTryDemo={() => setIsDemoModalOpen(true)}
         />
 
@@ -648,8 +629,6 @@ export default function App() {
               setSelectedDomain={setSelectedDomain}
               captionFontSize={captionFontSize}
               setCaptionFontSize={setCaptionFontSize}
-              highContrast={highContrast}
-              toggleHighContrast={() => setHighContrast(!highContrast)}
               onResetSession={handleResetSession}
               onToggleHistory={() => setIsHistoryOpen(!isHistoryOpen)}
               onOpenLibrary={() => setIsLibraryOpen(true)}
