@@ -136,11 +136,11 @@ export default function SignLibraryModal({
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-5 sm:px-6 py-2.5 bg-navy-950/50 border-b border-slate-800 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="px-5 sm:px-6 py-2.5 bg-navy-950/50 border-b border-slate-800 flex items-center justify-between gap-3 overflow-x-auto scrollbar-thin">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => setActiveTab('browse')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'browse'
                   ? 'bg-violet-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
@@ -150,7 +150,7 @@ export default function SignLibraryModal({
             </button>
             <button
               onClick={() => setActiveTab('add')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'add'
                   ? 'bg-cyan-500 text-black shadow-sm font-bold'
                   : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60'
@@ -161,7 +161,7 @@ export default function SignLibraryModal({
             </button>
             <button
               onClick={() => setActiveTab('developer-guide')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'developer-guide'
                   ? 'bg-violet-950 text-violet-200 border border-violet-500/40 shadow-sm'
                   : 'text-slate-400 hover:text-violet-300 hover:bg-slate-800/60'

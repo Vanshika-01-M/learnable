@@ -51,12 +51,12 @@ export default function Footer({ onOpenDemo }) {
 
           {/* Help & Support */}
           <div className="space-y-2.5">
-            <div className="text-slate-900 font-semibold uppercase tracking-wider text-[11px]">Help & Support</div>
+            <div className="text-white font-semibold uppercase tracking-wider text-[11px]">Help & Support</div>
             <ul className="space-y-2">
-              <li><a href="?page=support" className="hover:text-violet-700 transition-colors">Support</a></li>
-              <li><a href="?page=contact" className="hover:text-violet-700 transition-colors">Contact</a></li>
-              <li><a href="?page=faqs" className="hover:text-violet-700 transition-colors">FAQs</a></li>
-              <li><a href="?page=privacy" className="hover:text-violet-700 transition-colors">Privacy</a></li>
+              <li><a href="?page=support" className="hover:text-white transition-colors">Support</a></li>
+              <li><a href="?page=contact" className="hover:text-white transition-colors">Contact</a></li>
+              <li><a href="?page=faqs" className="hover:text-white transition-colors">FAQs</a></li>
+              <li><a href="?page=privacy" className="hover:text-white transition-colors">Privacy</a></li>
             </ul>
           </div>
 

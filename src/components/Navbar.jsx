@@ -71,7 +71,7 @@ export default function Navbar({
           </div>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2" aria-label="Main Navigation">
+          <nav className="hidden lg:flex items-center gap-1 lg:gap-2" aria-label="Main Navigation">
             <button
               onClick={() => scrollToSection('workspace')}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
@@ -154,7 +154,7 @@ export default function Navbar({
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex sm:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={onOpenLibrary}
               className="p-2 rounded-lg bg-navy-850 border border-slate-700 text-cyan-300"
@@ -176,7 +176,7 @@ export default function Navbar({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-navy-900/95 border-b border-violet-500/20 px-4 pt-3 pb-5 space-y-2.5 backdrop-blur-lg">
+        <div className="lg:hidden bg-navy-900/95 border-b border-violet-500/20 px-4 pt-3 pb-5 space-y-2.5 backdrop-blur-lg">
           <button
             onClick={() => scrollToSection('workspace')}
             className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2.5"

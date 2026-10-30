@@ -11,15 +11,15 @@ export default function HeroSection({ onTryDemo }) {
   return (
     <section id="hero" className="relative pt-12 pb-16 md:pt-20 md:pb-24 overflow-hidden">
       {/* Background radial gradient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-gradient-to-tr from-violet-600/15 via-cyan-500/10 to-transparent blur-3xl pointer-events-none rounded-full" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] max-w-[95vw] h-[350px] bg-gradient-to-tr from-violet-600/15 via-cyan-500/10 to-transparent blur-3xl pointer-events-none rounded-full" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         
         {/* Hackathon Showcase Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-violet-500/30 text-violet-300 text-xs font-medium mb-6 shadow-sm shadow-violet-900/40">
-          <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+        <div className="inline-flex flex-wrap sm:flex-nowrap items-center justify-center gap-2 px-3.5 py-1.5 rounded-2xl sm:rounded-full bg-slate-900/90 border border-violet-500/30 text-violet-300 text-xs font-medium mb-6 shadow-sm shadow-violet-900/40 max-w-full text-center">
+          <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-ping shrink-0" />
           <span className="font-semibold text-white">InnoTech 2026 Showcase</span>
-          <span className="text-slate-500">•</span>
+          <span className="text-slate-500 hidden sm:inline">•</span>
           <span>Indian Sign Language (ISL) Prototype</span>
         </div>
 
@@ -50,7 +50,7 @@ export default function HeroSection({ onTryDemo }) {
         </div>
 
         {/* Feature Highlights Grid */}
-        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left">
+        <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left">
           
           <div className="p-3.5 rounded-xl bg-navy-900/60 border border-slate-800/80 backdrop-blur-sm flex items-start gap-3">
             <div className="p-2 rounded-lg bg-cyan-950/60 text-cyan-400 border border-cyan-500/20 shrink-0">

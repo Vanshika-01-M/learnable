@@ -116,12 +116,12 @@ export default function HistoryDrawer({
                       </span>
                     </div>
 
-                    <p className="text-sm text-white font-medium mb-1">
+                    <p className="text-sm text-white font-medium mb-1 break-words">
                       &ldquo;{item.text}&rdquo;
                     </p>
 
                     {item.hindiText && (
-                      <p className="text-xs text-cyan-300/80 mb-2">
+                      <p className="text-xs text-cyan-300/80 mb-2 break-words">
                         {item.hindiText}
                       </p>
                     )}

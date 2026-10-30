@@ -655,7 +655,7 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             
             {/* Left Panel: Camera Studio */}
-            <div className="h-full">
+            <div className="h-full min-w-0 max-w-full">
               <CameraPanel
                 cameraStatus={cameraStatus}
                 errorMessage={errorMessage}
@@ -675,7 +675,7 @@ export default function App() {
             </div>
 
             {/* Right Panel: Live Captions */}
-            <div className="h-full">
+            <div className="h-full min-w-0 max-w-full">
               <CaptionPanel
                 currentCaption={currentCaption}
                 hindiCaption={hindiCaption}

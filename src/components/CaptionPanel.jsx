@@ -70,13 +70,13 @@ export default function CaptionPanel({
     <div className="flex flex-col h-full bg-navy-900/90 rounded-2xl border border-violet-500/20 shadow-xl overflow-hidden backdrop-blur-md">
       
       {/* Caption Panel Header Bar */}
-      <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-800 bg-navy-950/50">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-4 sm:px-5 py-3.5 border-b border-slate-800 bg-navy-950/50">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="p-1.5 rounded-lg bg-cyan-950/60 text-cyan-400 border border-cyan-500/20">
             <Languages className="w-4 h-4" />
           </div>
-          <div>
-            <h2 className="text-sm font-semibold text-white tracking-wide flex items-center gap-2">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-white tracking-wide flex flex-wrap items-center gap-2">
               Live Text Captions
               {isDemo && (
                 <span className="text-[10px] font-semibold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-500/30 flex items-center gap-1">
@@ -103,14 +103,14 @@ export default function CaptionPanel({
                 </span>
               )}
             </h2>
-            <p className="text-[11px] text-slate-400">Translated text display with speech synthesis</p>
+            <p className="text-[11px] text-slate-400 truncate">Translated text display with speech synthesis</p>
           </div>
         </div>
 
         {/* Confidence Badge */}
         {confidencePercent ? (
           <div 
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-medium border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-medium border shrink-0 ${
               isDemo 
                 ? 'bg-amber-950/40 text-amber-300 border-amber-500/30'
                 : 'bg-emerald-950/50 text-emerald-300 border-emerald-500/30'
@@ -140,16 +140,16 @@ export default function CaptionPanel({
       <div className="relative flex-1 min-h-[340px] sm:min-h-[420px] p-6 sm:p-8 flex flex-col justify-between bg-gradient-to-b from-navy-950/40 via-navy-900/60 to-navy-950/80">
         
         {/* Top Info Banner */}
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-violet-400" />
-            <span className="font-medium text-slate-300">
+        <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <span className="flex h-2 w-2 rounded-full bg-violet-400 shrink-0" />
+            <span className="font-medium text-slate-300 truncate">
               {sourceLabel || 'Waiting for sign input...'}
             </span>
           </div>
 
           {timestamp && (
-            <div className="flex items-center gap-1 font-mono text-[11px] text-slate-400 bg-navy-850 px-2.5 py-1 rounded-md border border-slate-800">
+            <div className="flex items-center gap-1 font-mono text-[11px] text-slate-400 bg-navy-850 px-2.5 py-1 rounded-md border border-slate-800 shrink-0">
               <Clock className="w-3 h-3 text-slate-400" />
               <span>{timestamp}</span>
             </div>
@@ -157,26 +157,26 @@ export default function CaptionPanel({
         </div>
 
         {/* Center Caption Box */}
-        <div className="my-auto py-6">
+        <div className="my-auto py-4 max-h-[260px] sm:max-h-[320px] overflow-y-auto pr-1 scrollbar-thin">
           {currentCaption ? (
             <div className="space-y-4 animate-fadeIn">
               {/* Primary English Caption Sentence */}
-              <p className={`${fontSizeClasses} text-white leading-relaxed font-sans`}>
+              <p className={`${fontSizeClasses} text-white leading-relaxed font-sans break-words`}>
                 &ldquo;{currentCaption}&rdquo;
               </p>
 
               {/* Secondary Hindi Translation */}
               {hindiCaption && (
-                <p className="text-base sm:text-lg text-cyan-300 font-medium">
+                <p className="text-base sm:text-lg text-cyan-300 font-medium break-words">
                   {hindiCaption}
                 </p>
               )}
 
               {/* ISL Grammatical Gloss representation */}
               {islGloss && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-navy-800/80 border border-violet-500/30 text-xs font-mono text-violet-300">
-                  <span className="text-slate-400 font-normal">ISL Gloss:</span>
-                  <span>{islGloss}</span>
+                <div className="inline-flex max-w-full flex-wrap items-center gap-2 px-3 py-1 rounded-lg bg-navy-800/80 border border-violet-500/30 text-xs font-mono text-violet-300 break-words">
+                  <span className="text-slate-400 font-normal shrink-0">ISL Gloss:</span>
+                  <span className="break-all">{islGloss}</span>
                 </div>
               )}
             </div>

@@ -40,7 +40,7 @@ export default function TranslationControls({
               id="language-select"
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer truncate max-w-[160px] sm:max-w-[220px] lg:max-w-none"
             >
               <option value="ISL" className="bg-navy-900 text-white">Indian Sign Language (ISL) — Default</option>
               <option value="ASL" className="bg-navy-900 text-white">American Sign Language (ASL)</option>
@@ -59,7 +59,7 @@ export default function TranslationControls({
               id="domain-select"
               value={selectedDomain}
               onChange={(e) => setSelectedDomain(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer truncate max-w-[140px] sm:max-w-[180px] lg:max-w-none"
             >
               {DEMO_DOMAINS.map(d => (
                 <option key={d.id} value={d.id} className="bg-navy-900 text-white">

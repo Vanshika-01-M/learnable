@@ -132,15 +132,15 @@ export default function UseCases({ onSelectScenario }) {
                 </div>
 
                 {/* Impact Stat Bottom */}
-                <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium">
+                <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium min-w-0 flex-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span className="truncate">{item.impact}</span>
+                    <span className="truncate" title={item.impact}>{item.impact}</span>
                   </div>
 
                   <button
                     onClick={() => onSelectScenario(item.id)}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0 ml-2"
+                    className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
                   >
                     <span>Test Demo</span>
                     <ArrowRight className="w-3 h-3" />

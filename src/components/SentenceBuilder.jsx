@@ -80,7 +80,7 @@ export default function SentenceBuilder({
             {words.map((word, i) => (
               <span
                 key={`${word}-${i}`}
-                className="px-2.5 py-1 rounded-lg bg-navy-950 border border-slate-800 text-xs font-medium text-slate-100"
+                className="px-2.5 py-1 rounded-lg bg-navy-950 border border-slate-800 text-xs font-medium text-slate-100 break-words max-w-full"
               >
                 {word}
               </span>

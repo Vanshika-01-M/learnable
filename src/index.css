@@ -51,7 +51,7 @@
 
 /* Learnable light-only design system: normalize the original dark utility palette. */
 :root { color-scheme: light; }
-html, body, #root { min-height: 100%; background: #f8fafc; color: #1e293b; }
+html, body, #root { min-height: 100%; background: #f8fafc; color: #1e293b; overflow-x: hidden; max-width: 100vw; }
 body { background-color: #f8fafc !important; color: #1e293b !important; }
 [class*="bg-navy-950"] { background-color: #f8fafc !important; }
 [class*="bg-navy-900"] { background-color: #ffffff !important; }

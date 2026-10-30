@@ -59,16 +59,16 @@ export default function CameraPanel({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-navy-900/90 rounded-2xl border border-violet-500/20 shadow-xl overflow-hidden backdrop-blur-md">
+    <div className="flex flex-col h-full bg-navy-900/90 rounded-2xl border border-violet-500/20 shadow-xl overflow-hidden backdrop-blur-md min-w-0 max-w-full">
       
       {/* Studio Header Bar */}
-      <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-800 bg-navy-950/50">
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 px-4 sm:px-5 py-3.5 border-b border-slate-800 bg-navy-950/50">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded-lg bg-violet-950/60 text-violet-400 border border-violet-500/20">
             <Video className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-white tracking-wide flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-white tracking-wide flex flex-wrap items-center gap-2">
               Camera Studio
               {cameraStatus === 'live' && (
                 <span className="flex items-center gap-1.5 text-[11px] font-normal text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-500/30">
@@ -247,8 +247,8 @@ export default function CameraPanel({
         )}
 
         {/* Bottom privacy pill */}
-        <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-navy-950/90 border border-slate-800 text-[11px] text-slate-300 backdrop-blur-sm">
+        <div className="absolute bottom-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-navy-950/90 border border-slate-800 text-[11px] text-slate-300 backdrop-blur-sm max-w-full truncate">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>
               {isModel
@@ -267,17 +267,17 @@ export default function CameraPanel({
       </div>
 
       {/* Live Signs Supported Cheat Sheet Strip */}
-      <div className="border-t border-slate-800/80 bg-navy-950/90 px-4 py-2">
-        <div className="flex items-center justify-between mb-1.5">
+      <div className="border-t border-slate-800/80 bg-navy-950/90 px-4 py-2 max-w-full overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5 min-w-0">
           <button
             onClick={() => setShowGuide(!showGuide)}
-            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 hover:text-white cursor-pointer"
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 hover:text-white cursor-pointer min-w-0"
           >
-            <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-            <span>{isModel ? 'ISL Model (263 Words + My Signs)' : 'Live Signs You Can Make (10+ Gestures)'}</span>
-            {showGuide ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
+            <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+            <span className="truncate">{isModel ? 'ISL Model (263 Words + My Signs)' : 'Live Signs You Can Make (10+ Gestures)'}</span>
+            {showGuide ? <ChevronUp className="w-3 h-3 text-slate-400 shrink-0" /> : <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />}
           </button>
-          <span className="text-[10px] text-cyan-300 font-mono">
+          <span className="text-[10px] text-cyan-300 font-mono truncate max-w-full">
             {isModel ? 'Upper body in view, one word per sign' : 'Wave hand for Bye 👋'}
           </span>
         </div>
@@ -287,7 +287,7 @@ export default function CameraPanel({
             <p className="text-[11px] text-slate-400">
               Start with hands down, sign one word, then lower your hands. Add your own words in the My Signs panel below.
             </p>
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin max-w-full">
               {sampleModelWords.map((word) => (
                 <span
                   key={word}
@@ -301,7 +301,7 @@ export default function CameraPanel({
         )}
 
         {showGuide && !isModel && (
-          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin max-w-full">
             {supportedLiveGestures.map((g, idx) => (
               <div
                 key={idx}
@@ -353,9 +353,9 @@ export default function CameraPanel({
         </div>
 
         {/* Crucial Ethical / Technical Disclaimer Note */}
-        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 max-w-xs">
+        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 min-w-0 max-w-xs">
           <Info className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-          <span className="truncate" title="Landmark detection tracks joints; translation occurs via the classifier.">
+          <span className="truncate min-w-0" title="Landmark detection tracks joints; translation occurs via the classifier.">
             Landmarks track joints; sign translation is separate.
           </span>
         </div>
