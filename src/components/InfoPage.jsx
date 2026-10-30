@@ -2,13 +2,11 @@ import React from 'react';
 import { ArrowLeft, BookOpen, Mail, MessageCircle, ShieldCheck } from 'lucide-react';
 import HowItWorks from './HowItWorks';
 import UseCases from './UseCases';
-import Roadmap from './Roadmap';
 import PrivacySection from './PrivacySection';
 
 const PAGE_TITLES = {
   'how-it-works': 'How It Works',
   'use-cases': 'Use Cases',
-  roadmap: 'Project Roadmap',
   privacy: 'Privacy & Accessibility',
   support: 'Support',
   contact: 'Contact',
@@ -92,7 +90,6 @@ export default function InfoPage({ page }) {
       <main className="min-h-[65vh]">
         {page === 'how-it-works' ? <HowItWorks /> : null}
         {page === 'use-cases' ? <UseCases onSelectScenario={goHomeForDemo} /> : null}
-        {page === 'roadmap' ? <Roadmap /> : null}
         {page === 'privacy' ? <PrivacySection /> : null}
         {['support', 'contact', 'faqs'].includes(page) ? (
           <section className="px-4 py-12 sm:px-6 sm:py-16">

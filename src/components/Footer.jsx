@@ -45,7 +45,6 @@ export default function Footer({ onOpenDemo }) {
               <li><a href="#workspace" className="hover:text-white transition-colors">Live Studio</a></li>
               <li><a href="?page=how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
               <li><a href="?page=use-cases" className="hover:text-white transition-colors">Use Cases</a></li>
-              <li><a href="?page=roadmap" className="hover:text-white transition-colors">Roadmap</a></li>
             </ul>
           </div>
 

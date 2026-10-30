@@ -7,7 +7,6 @@ import {
   Activity, 
   HelpCircle, 
   ShieldCheck, 
-  Milestone,
   Layers,
   BookOpen
 } from 'lucide-react';
@@ -101,16 +100,6 @@ export default function Navbar({
               }`}
             >
               Use Cases
-            </button>
-            <button
-              onClick={() => { window.location.href = '?page=roadmap'; }}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                activeSection === 'roadmap' 
-                  ? 'text-cyan-400 bg-cyan-950/40 border border-cyan-500/30' 
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              Roadmap
             </button>
           </nav>
 
@@ -207,13 +196,6 @@ export default function Navbar({
           >
             <Layers className="w-4 h-4 text-cyan-400" />
             Use Cases
-          </button>
-          <button
-            onClick={() => { window.location.href = '?page=roadmap'; }}
-            className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2.5"
-          >
-            <Milestone className="w-4 h-4 text-amber-400" />
-            Roadmap
           </button>
 
           <div className="pt-3 border-t border-slate-800 grid grid-cols-1 gap-2">

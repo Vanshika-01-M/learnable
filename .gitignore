@@ -33,3 +33,6 @@ server/user_data/
 
 # API keys
 server/.env
+
+# Netlify
+.netlify
